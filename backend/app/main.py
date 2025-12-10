@@ -206,6 +206,8 @@ async def debug_network():
 
 
 # --- BACKTEST ENDPOINT ---
+from app.services.backtest_service import BacktestService
+
 @app.post("/api/backtest", tags=["General"])
 async def run_backtest(request: dict):
     """
