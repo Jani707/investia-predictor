@@ -9,7 +9,8 @@ from contextlib import asynccontextmanager
 import asyncio
 import sys
 from pathlib import Path
-from app.services.email_service import EmailService
+from app.services.telegram_service import TelegramService
+# from app.services.email_service import EmailService  <-- Replaced by Telegram
 from app.services.analysis_service import AnalysisService
 
 # Agregar path del proyecto
@@ -28,15 +29,16 @@ async def run_market_analysis_loop():
             
             if opportunities:
                 print(f"✨ Found {len(opportunities)} opportunities!")
-                body = "🚀 Oportunidades de Inversión Detectadas:\n\n"
+                body = "🚀 *Oportunidades de Inversión Detectadas:*\n\n"
                 for opp in opportunities:
-                    body += f"🔹 {opp['name']} ({opp['symbol']})\n"
-                    body += f"   Precio: ${opp['price']:.2f}\n"
-                    body += f"   Razones: {', '.join(opp['reasons'])}\n\n"
+                    body += f"🔹 *{opp['name']}* ({opp['symbol']})\n"
+                    body += f"   💵 Precio: ${opp['price']:.2f}\n"
+                    body += f"   📊 Razones: {', '.join(opp['reasons'])}\n\n"
                 
-                body += "Recuerda: Esto es una sugerencia basada en algoritmos. Haz tu propia investigación."
+                body += "_Recuerda: Esto es una sugerencia basada en algoritmos. Haz tu propia investigación._"
                 
-                EmailService.send_email("InvestIA - Oportunidad de Compra Detectada", body)
+                # Enviar por Telegram
+                TelegramService.send_message(body)
             else:
                 print("😴 No opportunities found this time.")
                 
@@ -116,22 +118,20 @@ async def health_check():
     }
 
 
-@app.get("/api/test-email", tags=["General"])
-async def test_email():
+@app.get("/api/test-telegram", tags=["General"])
+async def test_telegram():
     """
-    Endpoint de prueba para forzar el envío de un correo.
-    Útil para verificar la configuración SMTP.
+    Endpoint de prueba para forzar el envío de un mensaje a Telegram.
     """
     try:
-        success = EmailService.send_email(
-            subject="🔔 Test InvestIA - Verificación de Sistema",
-            body="Este es un correo de prueba solicitado manualmente para verificar que el sistema de notificaciones está funcionando correctamente.\n\nSi lees esto, ¡todo está bien configurado! 🚀"
+        success = TelegramService.send_message(
+            "🔔 *Test InvestIA*\n\nSi lees esto, ¡tu bot de Telegram está conectado correctamente! 🚀"
         )
         
         if success:
-            return {"status": "success", "message": "Correo de prueba enviado correctamente"}
+            return {"status": "success", "message": "Mensaje de prueba enviado a Telegram"}
         else:
-            raise HTTPException(status_code=500, detail="Fallo al enviar el correo. Revisa los logs del servidor.")
+            raise HTTPException(status_code=500, detail="Fallo al enviar mensaje. Revisa el Token y Chat ID.")
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -148,16 +148,15 @@ async def trigger_analysis():
         opportunities = AnalysisService.analyze_market()
         
         if opportunities:
-            # Reutilizamos la lógica de envío (podríamos refactorizar, pero por ahora duplicamos para simplicidad)
-            body = "🚀 Oportunidades de Inversión Detectadas (Trigger Externo):\n\n"
+            body = "🚀 *Oportunidades de Inversión Detectadas (Trigger Externo):*\n\n"
             for opp in opportunities:
-                body += f"🔹 {opp['name']} ({opp['symbol']})\n"
-                body += f"   Precio: ${opp['price']:.2f}\n"
-                body += f"   Razones: {', '.join(opp['reasons'])}\n\n"
+                body += f"🔹 *{opp['name']}* ({opp['symbol']})\n"
+                body += f"   💵 Precio: ${opp['price']:.2f}\n"
+                body += f"   📊 Razones: {', '.join(opp['reasons'])}\n\n"
             
-            body += "Recuerda: Esto es una sugerencia basada en algoritmos. Haz tu propia investigación."
+            body += "_Recuerda: Esto es una sugerencia basada en algoritmos. Haz tu propia investigación._"
             
-            EmailService.send_email("InvestIA - Oportunidad Detectada (Auto)", body)
+            TelegramService.send_message(body)
             return {"status": "success", "message": f"Análisis completado. {len(opportunities)} oportunidades encontradas y enviadas."}
         
         return {"status": "success", "message": "Análisis completado. No se encontraron oportunidades."}

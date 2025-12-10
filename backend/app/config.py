@@ -229,6 +229,12 @@ EMAIL_CONFIG = {
     "smtp_port": 465
 }
 
+# Configuración de Telegram
+TELEGRAM_CONFIG = {
+    "bot_token": os.getenv("TELEGRAM_TOKEN", ""),
+    "chat_id": os.getenv("TELEGRAM_CHAT_ID", "")
+}
+
 # Configuración de Análisis de Oportunidades
 ANALYSIS_CONFIG = {
     "rsi_threshold_low": 30,      # Nivel de sobreventa
