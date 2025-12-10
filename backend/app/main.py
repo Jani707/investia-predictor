@@ -167,6 +167,40 @@ async def trigger_analysis():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/debug-network", tags=["General"])
+async def debug_network():
+    """
+    Endpoint de depuración para probar conectividad de red.
+    """
+    import socket
+    results = {}
+    
+    # Test DNS resolution
+    try:
+        ip = socket.gethostbyname("smtp.gmail.com")
+        results["dns_resolution"] = f"Success: {ip}"
+    except Exception as e:
+        results["dns_resolution"] = f"Failed: {e}"
+        
+    # Test Port 587
+    try:
+        sock = socket.create_connection(("smtp.gmail.com", 587), timeout=5)
+        sock.close()
+        results["port_587"] = "Open"
+    except Exception as e:
+        results["port_587"] = f"Closed/Blocked: {e}"
+        
+    # Test Port 465
+    try:
+        sock = socket.create_connection(("smtp.gmail.com", 465), timeout=5)
+        sock.close()
+        results["port_465"] = "Open"
+    except Exception as e:
+        results["port_465"] = f"Closed/Blocked: {e}"
+        
+    return results
+
+
 # Manejo de errores global
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
