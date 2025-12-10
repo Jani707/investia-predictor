@@ -2,48 +2,52 @@ import yfinance as yf
 import pandas as pd
 import ta
 from app.config import ASSETS, ANALYSIS_CONFIG
+from app.services.telegram_service import TelegramService
+from app.services.watchlist_service import WatchlistService
 
 class AnalysisService:
     @staticmethod
     def get_macro_context():
         """
-        Obtiene contexto macroeconómico (VIX, Bonos).
+        Obtiene indicadores macroeconómicos para ajustar la estrategia.
         """
-        context = {"vix": None, "treasury_yield": None, "status": "neutral"}
         try:
-            # VIX (Índice de Volatilidad/Miedo)
-            vix = yf.Ticker("^VIX").history(period="5d")
-            if not vix.empty:
-                context["vix"] = vix['Close'].iloc[-1]
+            # VIX (Volatilidad)
+            vix = yf.Ticker("^VIX").history(period="5d")['Close'].iloc[-1]
             
-            # Treasury Yield 10 Years (Referencia de tasa libre de riesgo)
-            tnx = yf.Ticker("^TNX").history(period="5d")
-            if not tnx.empty:
-                context["treasury_yield"] = tnx['Close'].iloc[-1]
-                
-            # Determinar estado del mercado
-            if context["vix"] and context["vix"] > ANALYSIS_CONFIG["vix_threshold_high"]:
+            # 10-Year Treasury Yield (Riesgo libre)
+            tnx = yf.Ticker("^TNX").history(period="5d")['Close'].iloc[-1]
+            
+            context = {
+                "vix": vix,
+                "tnx": tnx,
+                "status": "neutral"
+            }
+            
+            if vix > ANALYSIS_CONFIG["vix_threshold_extreme"]:
+                context["status"] = "extreme_fear"
+            elif vix > ANALYSIS_CONFIG["vix_threshold_high"]:
                 context["status"] = "fear"
-            elif context["vix"] and context["vix"] < 15:
-                context["status"] = "complacency"
                 
+            print(f"🌍 Macro Context: VIX={vix:.2f}, 10Y Yield={tnx:.2f}, Status={context['status']}")
+            return context
         except Exception as e:
             print(f"⚠️ Error fetching macro data: {e}")
-            
-        return context
+            return {"vix": 20, "tnx": 4.0, "status": "neutral"} # Fallback
 
     @staticmethod
     def analyze_market():
-        """
-        Analiza el mercado buscando oportunidades con lógica avanzada (Fase 2).
-        """
-        opportunities = []
-        macro = AnalysisService.get_macro_context()
-        print(f"🌍 Macro Context: VIX={macro['vix']:.2f}, 10Y Yield={macro['treasury_yield']:.2f}, Status={macro['status']}")
-        
         print("🔍 Analyzing market for opportunities...")
+        opportunities = []
         
-        for symbol, info in ASSETS.items():
+        # Obtener contexto macro
+        macro = AnalysisService.get_macro_context()
+        
+        # Combinar tickers por defecto + Watchlist
+        custom_symbols = WatchlistService.get_watchlist()
+        all_symbols = list(set(ANALYSIS_CONFIG["tickers"] + custom_symbols))
+        
+        for symbol in all_symbols:
             try:
                 # Descargar datos (6 meses para SMA 200 si fuera necesario, o al menos suficiente para MACD/Bollinger)
                 ticker = yf.Ticker(symbol)

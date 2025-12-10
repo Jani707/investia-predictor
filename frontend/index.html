@@ -287,6 +287,17 @@
                 Activos Disponibles
             </h2>
 
+            <!-- Watchlist Controls -->
+            <div class="watchlist-controls">
+                <div class="input-group">
+                    <input type="text" id="newSymbolInput" placeholder="Ej: NVDA, TSLA, AAPL" class="text-input">
+                    <button id="addSymbolBtn" class="btn btn-small btn-primary">
+                        + Agregar
+                    </button>
+                </div>
+                <p class="hint-text">Agrega tus propias acciones para que la IA las analice.</p>
+            </div>
+
             <div class="assets-table-container">
                 <table class="assets-table">
                     <thead>
@@ -299,6 +310,7 @@
                             <th>Precio Actual</th>
                             <th>Predicción 5D</th>
                             <th>Recomendación</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="assetsTableBody">

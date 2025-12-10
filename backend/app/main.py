@@ -222,6 +222,28 @@ async def run_backtest(request: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# --- WATCHLIST ENDPOINTS ---
+from app.services.watchlist_service import WatchlistService
+
+@app.get("/api/watchlist", tags=["Watchlist"])
+async def get_watchlist():
+    return {"watchlist": WatchlistService.get_watchlist()}
+
+@app.post("/api/watchlist/add", tags=["Watchlist"])
+async def add_to_watchlist(request: dict):
+    symbol = request.get("symbol")
+    if not symbol:
+        raise HTTPException(status_code=400, detail="Symbol is required")
+    return WatchlistService.add_symbol(symbol)
+
+@app.post("/api/watchlist/remove", tags=["Watchlist"])
+async def remove_from_watchlist(request: dict):
+    symbol = request.get("symbol")
+    if not symbol:
+        raise HTTPException(status_code=400, detail="Symbol is required")
+    return WatchlistService.remove_symbol(symbol)
+
+
 # Manejo de errores global
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):

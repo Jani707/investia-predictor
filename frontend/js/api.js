@@ -202,6 +202,30 @@ class APIClient {
             throw error;
         }
     }
+
+    /**
+     * Agrega un símbolo a la watchlist
+     */
+    async addSymbol(symbol) {
+        const response = await fetch(`${this.baseUrl}/watchlist/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbol })
+        });
+        return await response.json();
+    }
+
+    /**
+     * Elimina un símbolo de la watchlist
+     */
+    async removeSymbol(symbol) {
+        const response = await fetch(`${this.baseUrl}/watchlist/remove`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbol })
+        });
+        return await response.json();
+    }
 }
 
 // Instancia global

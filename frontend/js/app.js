@@ -82,6 +82,12 @@ class App {
         if (runBacktestBtn) {
             runBacktestBtn.addEventListener('click', () => this.runBacktest());
         }
+
+        // Botón agregar símbolo
+        const addSymbolBtn = document.getElementById('addSymbolBtn');
+        if (addSymbolBtn) {
+            addSymbolBtn.addEventListener('click', () => this.handleAddSymbol());
+        }
     }
 
     /**
@@ -434,95 +440,100 @@ class App {
             const pred5dChange = lastPred?.change_percent || 0;
 
             return `
-                <tr>
+            return `
+                < tr >
                     <td><strong>${pred.symbol}</strong></td>
                     <td>${pred.name || pred.symbol}</td>
                     <td><small>${pred.description || ''}</small></td>
-                    <td>ETF</td>
+                    <td>ETF/Stock</td>
                     <td><span class="risk-badge ${pred.risk || 'medium'}">${riskLabels[pred.risk] || 'Medio'}</span></td>
                     <td>$${(pred.current_price || 0).toFixed(2)}</td>
                     <td class="${pred5dChange >= 0 ? 'positive' : 'negative'}">
                         $${pred5d.toFixed(2)} (${pred5dChange >= 0 ? '+' : ''}${pred5dChange.toFixed(2)}%)
                     </td>
                     <td><span class="recommendation ${recClass}">${recommendation}</span></td>
-                </tr>
+                    <td>
+                        <button class="btn-small" style="background: #ef5350;" onclick="app.handleRemoveSymbol('${pred.symbol}')">🗑️</button>
+                    </td>
+                </tr >
             `;
-        });
+            `;
+    });
 
         tbody.innerHTML = rows.join('');
-    }
+}
 
     /**
      * Refresca todos los datos
      */
     async refreshData() {
-        const refreshBtn = document.getElementById('refreshBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<span class="btn-icon">⏳</span> Actualizando...';
+    }
+
+    try {
+        await this.checkAPIConnection();
+        await this.loadInitialData();
+        this.showToast('success', 'Datos actualizados correctamente');
+    } catch (error) {
+        this.showToast('error', 'Error al actualizar los datos');
+    } finally {
         if (refreshBtn) {
-            refreshBtn.disabled = true;
-            refreshBtn.innerHTML = '<span class="btn-icon">⏳</span> Actualizando...';
-        }
-
-        try {
-            await this.checkAPIConnection();
-            await this.loadInitialData();
-            this.showToast('success', 'Datos actualizados correctamente');
-        } catch (error) {
-            this.showToast('error', 'Error al actualizar los datos');
-        } finally {
-            if (refreshBtn) {
-                refreshBtn.disabled = false;
-                refreshBtn.innerHTML = '<span class="btn-icon">🔄</span> Actualizar';
-            }
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '<span class="btn-icon">🔄</span> Actualizar';
         }
     }
+}
 
-    /**
-     * Inicia el auto-refresh
-     */
-    startAutoRefresh() {
-        // Refrescar cada 5 minutos
-        this.refreshInterval = setInterval(() => {
-            this.refreshData();
-        }, 5 * 60 * 1000);
-    }
+/**
+ * Inicia el auto-refresh
+ */
+startAutoRefresh() {
+    // Refrescar cada 5 minutos
+    this.refreshInterval = setInterval(() => {
+        this.refreshData();
+    }, 5 * 60 * 1000);
+}
 
-    /**
-     * Muestra/oculta el estado de carga
-     */
-    setLoading(loading) {
-        this.isLoading = loading;
-        // Aquí podrías agregar un indicador de carga global
-    }
+/**
+ * Muestra/oculta el estado de carga
+ */
+setLoading(loading) {
+    this.isLoading = loading;
+    // Aquí podrías agregar un indicador de carga global
+}
 
     /**
      * Genera el portafolio de inversión
      */
     async generatePortfolio() {
-        const riskProfile = document.getElementById('riskProfile').value;
-        const amount = document.getElementById('investAmount').value;
-        const btn = document.getElementById('generatePortfolioBtn');
-        const results = document.getElementById('portfolioResults');
+    const riskProfile = document.getElementById('riskProfile').value;
+    const amount = document.getElementById('investAmount').value;
+    const btn = document.getElementById('generatePortfolioBtn');
+    const results = document.getElementById('portfolioResults');
 
-        if (!amount || amount < 100) {
-            this.showToast('warning', 'Por favor ingresa un monto válido (min $100)');
-            return;
-        }
+    if (!amount || amount < 100) {
+        this.showToast('warning', 'Por favor ingresa un monto válido (min $100)');
+        return;
+    }
 
-        try {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="btn-icon">⏳</span> Generando...';
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-icon">⏳</span> Generando...';
 
-            const data = await api.generatePortfolio(riskProfile, amount);
+        const data = await api.generatePortfolio(riskProfile, amount);
 
-            // Mostrar resultados
-            results.style.display = 'block';
+        // Mostrar resultados
+        results.style.display = 'block';
 
-            // Renderizar gráfico
-            chartManager.createAllocationChart('allocationChart', data.allocation);
+        // Renderizar gráfico
+        chartManager.createAllocationChart('allocationChart', data.allocation);
 
-            // Renderizar tabla
-            const tbody = document.getElementById('allocationTableBody');
-            tbody.innerHTML = data.allocation.map(asset => `
+        // Renderizar tabla
+        const tbody = document.getElementById('allocationTableBody');
+        tbody.innerHTML = data.allocation.map(asset => `
                 <tr>
                     <td>
                         <strong>${asset.symbol}</strong><br>
@@ -536,46 +547,46 @@ class App {
                 </tr>
             `).join('');
 
-            this.showToast('success', 'Portafolio generado exitosamente');
+        this.showToast('success', 'Portafolio generado exitosamente');
 
-        } catch (error) {
-            console.error('Error generando portafolio:', error);
-            this.showToast('error', 'Error al generar el portafolio');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="btn-icon">✨</span> Generar Propuesta';
-        }
+    } catch (error) {
+        console.error('Error generando portafolio:', error);
+        this.showToast('error', 'Error al generar el portafolio');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-icon">✨</span> Generar Propuesta';
     }
+}
 
-    /**
-     * Muestra una notificación toast
-     */
-    showToast(type, message) {
-        const container = document.getElementById('toastContainer');
-        if (!container) return;
+/**
+ * Muestra una notificación toast
+ */
+showToast(type, message) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
 
-        const icons = {
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: 'ℹ️'
-        };
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
 
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
             <span class="toast-icon">${icons[type]}</span>
             <span class="toast-message">${message}</span>
             <button class="toast-close" onclick="this.parentElement.remove()">×</button>
         `;
 
-        container.appendChild(toast);
+    container.appendChild(toast);
 
-        // Auto-remove después de 5 segundos
-        setTimeout(() => {
-            toast.remove();
-        }, 5000);
-    }
+    // Auto-remove después de 5 segundos
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
 }
 
 // Inicializar la aplicación cuando el DOM esté listo
