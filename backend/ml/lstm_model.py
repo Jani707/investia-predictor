@@ -9,12 +9,23 @@ import os
 # Silenciar warnings de TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-import tensorflow as tf
-from tensorflow import keras
-from keras.models import Sequential, load_model
-from keras.layers import LSTM, Dense, Dropout, BatchNormalization, Input
-from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from keras.models import Sequential, load_model
+    from keras.layers import LSTM, Dense, Dropout, BatchNormalization, Input
+    from keras.optimizers import Adam
+    from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+    TF_AVAILABLE = True
+except ImportError:
+    print("⚠️ TensorFlow not available. ML features will be disabled.")
+    TF_AVAILABLE = False
+    # Dummy classes/functions to prevent NameError on class definition
+    Sequential = object
+    load_model = None
+    LSTM = Dense = Dropout = BatchNormalization = Input = None
+    Adam = None
+    EarlyStopping = ModelCheckpoint = ReduceLROnPlateau = None
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -60,6 +71,9 @@ class LSTMModel:
         Returns:
             Modelo Keras compilado
         """
+        if not TF_AVAILABLE:
+            raise ImportError("TensorFlow is not installed. ML features are disabled.")
+
         model = Sequential([
             # Input Layer
             Input(shape=(self.sequence_length, self.n_features)),

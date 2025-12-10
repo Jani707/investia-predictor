@@ -10,9 +10,9 @@ pandas==2.1.4
 yfinance==0.2.33
 
 # Machine Learning
-tensorflow==2.15.0
+# tensorflow==2.15.0  <-- Removed for lightweight free tier deployment
 scikit-learn==1.3.2
-keras==2.15.0
+# keras==2.15.0       <-- Removed for lightweight free tier deployment
 
 # Technical Analysis
 ta==0.11.0
