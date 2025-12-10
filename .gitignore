@@ -3,5 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 .env
-backend/saved_models/
+backend/saved_models/*
+!backend/saved_models/*.keras
+!backend/saved_models/*.json
 backend/data/
