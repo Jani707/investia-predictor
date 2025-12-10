@@ -4,6 +4,7 @@ import ta
 from app.config import ASSETS, ANALYSIS_CONFIG
 from app.services.telegram_service import TelegramService
 from app.services.watchlist_service import WatchlistService
+from app.services.sentiment_service import SentimentService
 
 class AnalysisService:
     @staticmethod
@@ -40,24 +41,14 @@ class AnalysisService:
         print("🔍 Analyzing market for opportunities...")
         opportunities = []
         
-        # Obtener contexto macro
         macro = AnalysisService.get_macro_context()
-        
-        # Combinar tickers por defecto + Watchlist
         custom_symbols = WatchlistService.get_watchlist()
         all_symbols = list(set(ANALYSIS_CONFIG["tickers"] + custom_symbols))
         
         for symbol in all_symbols:
             try:
-                # Descargar datos (6 meses para SMA 200 si fuera necesario, o al menos suficiente para MACD/Bollinger)
+                # 1. Fetch Data
                 ticker = yf.Ticker(symbol)
-                hist = ticker.history(period="1y") # Necesitamos más historia para SMA 200
-                
-                if hist.empty:
-                    continue
-                
-                # --- CÁLCULO DE INDICADORES ---
-                close = hist['Close']
                 
                 # 1. RSI
                 hist['RSI'] = ta.momentum.rsi(close, window=14)

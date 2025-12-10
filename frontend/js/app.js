@@ -244,6 +244,16 @@ class App {
         const confidencePercent = ((prediction.confidence?.score || 0.5) * 100).toFixed(0);
         const currentPrice = prediction.current_price || 0;
 
+        // Sentiment Badge
+        let sentimentHtml = '';
+        if (prediction.sentiment) {
+            const s = prediction.sentiment;
+            let sClass = 'neutral';
+            if (s.label === 'Bullish') sClass = 'positive';
+            if (s.label === 'Bearish') sClass = 'negative';
+            sentimentHtml = `<div class="sentiment-badge ${sClass}" title="Basado en ${s.count} noticias">📰 ${s.label} (${s.score.toFixed(2)})</div>`;
+        }
+
         // Predicciones por día
         const predictions = prediction.predictions || [];
         const predDays = predictions.slice(0, 5).map((p, i) => `
@@ -271,6 +281,8 @@ class App {
                         ${changeSymbol}${change.toFixed(2)}%
                     </span>
                 </div>
+                
+                ${sentimentHtml}
                 
                 <div class="card-predictions">
                     ${predDays}
