@@ -5,7 +5,7 @@
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8000/api'
-    : 'https://investia-backend.onrender.com/api'; // URL por defecto en Render (ajustar si cambia el nombre)
+    : 'https://investia-predictor.onrender.com/api'; // URL real del backend desplegado
 
 class APIClient {
     constructor(baseUrl = API_BASE_URL) {
