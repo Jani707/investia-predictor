@@ -141,6 +141,13 @@ class App {
             this.updateStats();
             this.updateConfidenceChart();
 
+            // Actualizar precios en el simulador
+            const currentPrices = {};
+            this.predictions.forEach(p => {
+                currentPrices[p.symbol] = p.current_price;
+            });
+            simulator.renderHoldingsTable(currentPrices);
+
         } catch (error) {
             console.error('Error cargando predicciones:', error);
             // Mostrar estado de error
@@ -178,6 +185,7 @@ class App {
         if (recommendation === 'VENDER') recClass = 'sell';
 
         const confidencePercent = ((prediction.confidence?.score || 0.5) * 100).toFixed(0);
+        const currentPrice = prediction.current_price || 0;
 
         // Predicciones por día
         const predictions = prediction.predictions || [];
@@ -201,7 +209,7 @@ class App {
                 </div>
                 
                 <div class="card-price">
-                    <span class="current-price">$${(prediction.current_price || 0).toFixed(2)}</span>
+                    <span class="current-price">$${currentPrice.toFixed(2)}</span>
                     <span class="price-change ${changeClass}">
                         ${changeSymbol}${change.toFixed(2)}%
                     </span>
@@ -218,10 +226,47 @@ class App {
                         </div>
                         <span class="confidence-text">${confidencePercent}%</span>
                     </div>
-                    <span class="recommendation ${recClass}">${recommendation}</span>
+                    <div class="card-actions">
+                        <button class="btn-small buy-btn" onclick="app.handleBuy('${prediction.symbol}', ${currentPrice})">
+                            Comprar
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
+    }
+
+    /**
+     * Maneja la compra desde la UI
+     */
+    handleBuy(symbol, price) {
+        // Por simplicidad, compramos 1 unidad por defecto o preguntamos
+        const quantity = prompt(`¿Cuántas acciones de ${symbol} quieres comprar a $${price}?`, "1");
+        if (quantity && parseInt(quantity) > 0) {
+            const result = simulator.buy(symbol, price, parseInt(quantity));
+            if (result.success) {
+                this.showToast('success', result.message);
+            } else {
+                this.showToast('error', result.message);
+            }
+        }
+    }
+
+    /**
+     * Abre modal de trade (placeholder para venta)
+     */
+    openTradeModal(type, symbol, price) {
+        if (type === 'SELL') {
+            const quantity = prompt(`¿Cuántas acciones de ${symbol} quieres vender a $${price}?`, "1");
+            if (quantity && parseInt(quantity) > 0) {
+                const result = simulator.sell(symbol, price, parseInt(quantity));
+                if (result.success) {
+                    this.showToast('success', result.message);
+                } else {
+                    this.showToast('error', result.message);
+                }
+            }
+        }
     }
 
     /**

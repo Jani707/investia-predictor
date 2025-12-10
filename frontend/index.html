@@ -13,8 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lightweight Charts (TradingView) -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="css/styles.css">
@@ -27,21 +27,24 @@
             <div class="logo">
                 <span class="logo-icon">📈</span>
                 <span class="logo-text">InvestIA</span>
-                <span class="logo-badge">Predictor</span>
+                <span class="logo-badge">Pro</span>
             </div>
             <nav class="nav">
                 <a href="#dashboard" class="nav-link active">Dashboard</a>
                 <a href="#predictions" class="nav-link">Predicciones</a>
                 <a href="#portfolio" class="nav-link">Portafolio</a>
-                <a href="#assets" class="nav-link">Activos</a>
+                <a href="#simulator" class="nav-link highlight">Simulador 🎮</a>
             </nav>
             <div class="header-actions">
+                <div class="simulator-balance" id="simBalanceDisplay">
+                    <span class="label">Balance Virtual:</span>
+                    <span class="value">$10,000.00</span>
+                </div>
                 <button id="refreshBtn" class="btn btn-secondary">
-                    <span class="btn-icon">🔄</span> Actualizar
+                    <span class="btn-icon">🔄</span>
                 </button>
                 <div class="status-indicator" id="apiStatus">
                     <span class="status-dot"></span>
-                    <span class="status-text">Conectando...</span>
                 </div>
             </div>
         </div>
@@ -57,28 +60,28 @@
                     <div class="stat-icon positive">📊</div>
                     <div class="stat-content">
                         <span class="stat-value" id="totalAssets">6</span>
-                        <span class="stat-label">Activos Monitoreados</span>
+                        <span class="stat-label">Activos</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon success">🎯</div>
+                    <div class="stat-icon success">💰</div>
                     <div class="stat-content">
-                        <span class="stat-value" id="avgAccuracy">--%</span>
-                        <span class="stat-label">Precisión Promedio</span>
+                        <span class="stat-value" id="portfolioValue">$0.00</span>
+                        <span class="stat-label">Valor Portafolio</span>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon warning">📈</div>
                     <div class="stat-content">
                         <span class="stat-value" id="bullishCount">--</span>
-                        <span class="stat-label">Señales Alcistas</span>
+                        <span class="stat-label">Oportunidades</span>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon info">🕐</div>
                     <div class="stat-content">
                         <span class="stat-value" id="lastUpdate">--:--</span>
-                        <span class="stat-label">Última Actualización</span>
+                        <span class="stat-label">Actualizado</span>
                     </div>
                 </div>
             </div>
@@ -86,14 +89,14 @@
             <!-- Predictions Grid -->
             <h2 class="section-title">
                 <span class="title-icon">🎯</span>
-                Predicciones en Tiempo Real
+                Oportunidades de Inversión
             </h2>
 
             <div class="predictions-grid" id="predictionsGrid">
                 <!-- Se llena dinámicamente -->
                 <div class="loading-container">
                     <div class="loading-spinner"></div>
-                    <p>Cargando predicciones...</p>
+                    <p>Analizando mercado...</p>
                 </div>
             </div>
         </section>
@@ -101,8 +104,8 @@
         <!-- Chart Section -->
         <section id="predictions" class="section">
             <h2 class="section-title">
-                <span class="title-icon">📊</span>
-                Análisis Detallado
+                <span class="title-icon">🕯️</span>
+                Gráfico Interactivo
             </h2>
 
             <div class="chart-container">
@@ -126,21 +129,47 @@
                         </optgroup>
                     </select>
                     <div class="chart-period-selector">
-                        <button class="period-btn active" data-days="30">30D</button>
-                        <button class="period-btn" data-days="60">60D</button>
-                        <button class="period-btn" data-days="90">90D</button>
+                        <button class="period-btn active" data-days="90">3M</button>
+                        <button class="period-btn" data-days="180">6M</button>
+                        <button class="period-btn" data-days="365">1Y</button>
                     </div>
                 </div>
-                <div class="chart-wrapper">
-                    <canvas id="priceChart"></canvas>
-                </div>
+                <!-- Contenedor para Lightweight Charts -->
+                <div id="tvChartContainer" class="chart-wrapper" style="height: 400px; position: relative;"></div>
             </div>
+        </section>
 
-            <!-- Confidence Chart -->
-            <div class="chart-container">
-                <h3 class="chart-title">Confianza del Modelo por Activo</h3>
-                <div class="chart-wrapper chart-small">
-                    <canvas id="confidenceChart"></canvas>
+        <!-- Simulator Section -->
+        <section id="simulator" class="section">
+            <h2 class="section-title">
+                <span class="title-icon">🎮</span>
+                Tu Portafolio Virtual
+            </h2>
+
+            <div class="portfolio-container">
+                <div class="portfolio-summary">
+                    <div class="portfolio-details">
+                        <h3>Mis Posiciones</h3>
+                        <table class="assets-table">
+                            <thead>
+                                <tr>
+                                    <th>Activo</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Prom.</th>
+                                    <th>Precio Actual</th>
+                                    <th>Valor Total</th>
+                                    <th>Ganancia/Pérdida</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="holdingsTableBody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center;">No tienes activos aún. ¡Compra algo!
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -253,9 +282,10 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- Scripts -->
-    <script src="js/api.js?v=2"></script>
-    <script src="js/charts.js?v=2"></script>
-    <script src="js/app.js?v=2"></script>
+    <script src="js/api.js?v=3"></script>
+    <script src="js/charts.js?v=3"></script>
+    <script src="js/simulator.js?v=1"></script>
+    <script src="js/app.js?v=3"></script>
 </body>
 
 </html>
