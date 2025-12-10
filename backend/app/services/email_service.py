@@ -25,8 +25,12 @@ class EmailService:
         msg.attach(MIMEText(body, 'plain'))
 
         try:
-            server = smtplib.SMTP(EMAIL_CONFIG["smtp_server"], EMAIL_CONFIG["smtp_port"], timeout=10)
-            server.starttls()
+            if EMAIL_CONFIG["smtp_port"] == 465:
+                server = smtplib.SMTP_SSL(EMAIL_CONFIG["smtp_server"], EMAIL_CONFIG["smtp_port"], timeout=10)
+            else:
+                server = smtplib.SMTP(EMAIL_CONFIG["smtp_server"], EMAIL_CONFIG["smtp_port"], timeout=10)
+                server.starttls()
+            
             server.login(sender, password)
             text = msg.as_string()
             server.sendmail(sender, recipient, text)

@@ -226,7 +226,7 @@ EMAIL_CONFIG = {
     "password": os.getenv("EMAIL_PASSWORD", "ytkp nfaz slfg jodg"),  # App Password
     "recipient": os.getenv("EMAIL_RECIPIENT", "sf.alfaro10@gmail.com"),
     "smtp_server": "smtp.gmail.com",
-    "smtp_port": 587
+    "smtp_port": 465
 }
 
 # Configuración de Análisis de Oportunidades
