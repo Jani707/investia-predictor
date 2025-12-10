@@ -1,0 +1,17 @@
+{
+  "symbol": "SOXL",
+  "name": "Direxion Daily Semiconductor Bull 3X",
+  "trained_at": "2025-12-10T12:18:47.119503",
+  "epochs_completed": 10,
+  "final_loss": 0.032021187245845795,
+  "final_val_loss": 0.12234017997980118,
+  "metrics": {
+    "loss": 0.12234017997980118,
+    "mae": 0.3345147669315338,
+    "rmse": 0.3497716037918012,
+    "directional_accuracy": 0.4805194805194805
+  },
+  "data_points": 502,
+  "train_samples": 311,
+  "test_samples": 78
+}

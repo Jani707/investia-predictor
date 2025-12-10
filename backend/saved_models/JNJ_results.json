@@ -1,0 +1,17 @@
+{
+  "symbol": "JNJ",
+  "name": "Johnson & Johnson",
+  "trained_at": "2025-12-10T12:21:22.369269",
+  "epochs_completed": 10,
+  "final_loss": 0.02672502025961876,
+  "final_val_loss": 0.3663545846939087,
+  "metrics": {
+    "loss": 0.3663545846939087,
+    "mae": 0.5798892378807068,
+    "rmse": 0.6052723248318815,
+    "directional_accuracy": 0.4675324675324675
+  },
+  "data_points": 502,
+  "train_samples": 311,
+  "test_samples": 78
+}

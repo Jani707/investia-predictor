@@ -1,0 +1,17 @@
+{
+  "symbol": "ARKK",
+  "name": "ARK Innovation ETF",
+  "trained_at": "2025-12-10T12:16:41.249255",
+  "epochs_completed": 10,
+  "final_loss": 0.03493233770132065,
+  "final_val_loss": 0.42542511224746704,
+  "metrics": {
+    "loss": 0.42542511224746704,
+    "mae": 0.6441808938980103,
+    "rmse": 0.6522462008178868,
+    "directional_accuracy": 0.5064935064935064
+  },
+  "data_points": 502,
+  "train_samples": 311,
+  "test_samples": 78
+}

@@ -1,0 +1,17 @@
+{
+  "symbol": "VOO",
+  "name": "Vanguard S&P 500 ETF",
+  "trained_at": "2025-12-10T12:04:25.317617",
+  "epochs_completed": 10,
+  "final_loss": 0.05478249117732048,
+  "final_val_loss": 0.23190277814865112,
+  "metrics": {
+    "loss": 0.23190277814865112,
+    "mae": 0.47055578231811523,
+    "rmse": 0.48156285299091733,
+    "directional_accuracy": 0.4025974025974026
+  },
+  "data_points": 500,
+  "train_samples": 309,
+  "test_samples": 78
+}

@@ -1,0 +1,17 @@
+{
+  "symbol": "TQQQ",
+  "name": "ProShares UltraPro QQQ",
+  "trained_at": "2025-12-10T12:19:59.958934",
+  "epochs_completed": 10,
+  "final_loss": 0.039745159447193146,
+  "final_val_loss": 0.3555123507976532,
+  "metrics": {
+    "loss": 0.3555123507976532,
+    "mae": 0.5880038142204285,
+    "rmse": 0.596248574925918,
+    "directional_accuracy": 0.4935064935064935
+  },
+  "data_points": 502,
+  "train_samples": 311,
+  "test_samples": 78
+}

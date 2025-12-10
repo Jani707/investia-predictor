@@ -1,0 +1,17 @@
+{
+  "symbol": "VNQ",
+  "name": "Vanguard Real Estate ETF",
+  "trained_at": "2025-12-10T12:09:46.672100",
+  "epochs_completed": 10,
+  "final_loss": 0.05447666719555855,
+  "final_val_loss": 0.08427003771066666,
+  "metrics": {
+    "loss": 0.08427003771066666,
+    "mae": 0.2846941649913788,
+    "rmse": 0.29029302438662025,
+    "directional_accuracy": 0.4675324675324675
+  },
+  "data_points": 500,
+  "train_samples": 309,
+  "test_samples": 78
+}

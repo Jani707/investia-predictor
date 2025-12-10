@@ -1,0 +1,17 @@
+{
+  "symbol": "BND",
+  "name": "Vanguard Total Bond Market ETF",
+  "trained_at": "2025-12-10T12:07:05.524530",
+  "epochs_completed": 10,
+  "final_loss": 0.03341348096728325,
+  "final_val_loss": 0.018973439931869507,
+  "metrics": {
+    "loss": 0.018973439931869507,
+    "mae": 0.11651521176099777,
+    "rmse": 0.13774411479534004,
+    "directional_accuracy": 0.5584415584415584
+  },
+  "data_points": 500,
+  "train_samples": 309,
+  "test_samples": 78
+}

@@ -239,5 +239,13 @@ TELEGRAM_CONFIG = {
 ANALYSIS_CONFIG = {
     "rsi_threshold_low": 30,      # Nivel de sobreventa
     "price_drop_threshold": 0.05, # 5% de caída reciente
-    "volatility_threshold": 0.03  # 3% de volatilidad diaria (proxy de inestabilidad)
+    "volatility_threshold": 0.03, # 3% de volatilidad diaria (proxy de inestabilidad)
+    
+    # Nuevos Indicadores (Fase 2)
+    "vix_threshold_high": 30.0,   # VIX > 30 indica miedo extremo (precaución o oportunidad según estrategia)
+    "vix_threshold_extreme": 40.0, # VIX > 40 es pánico total
+    "macd_threshold": 0,          # MACD Line > Signal Line (cruce alcista)
+    "bollinger_std_dev": 2.0,     # Desviaciones estándar para bandas
+    "sma_fast": 50,               # Media móvil rápida
+    "sma_slow": 200               # Media móvil lenta
 }

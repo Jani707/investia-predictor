@@ -1,0 +1,17 @@
+{
+  "symbol": "AAPL",
+  "name": "Apple Inc.",
+  "trained_at": "2025-12-10T12:25:34.322638",
+  "epochs_completed": 10,
+  "final_loss": 0.03820205479860306,
+  "final_val_loss": 0.2752918601036072,
+  "metrics": {
+    "loss": 0.2752918601036072,
+    "mae": 0.5123661756515503,
+    "rmse": 0.5246826351990297,
+    "directional_accuracy": 0.5584415584415584
+  },
+  "data_points": 502,
+  "train_samples": 311,
+  "test_samples": 78
+}
