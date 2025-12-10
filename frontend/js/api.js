@@ -175,6 +175,33 @@ class APIClient {
             throw error;
         }
     }
+
+    /**
+     * Ejecuta un backtest
+     */
+    async runBacktest(symbol, days) {
+        try {
+            const response = await fetch(`${this.baseUrl}/backtest`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    symbol: symbol,
+                    days: parseInt(days)
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API Error [runBacktest]:', error);
+            throw error;
+        }
+    }
 }
 
 // Instancia global

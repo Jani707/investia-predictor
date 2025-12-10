@@ -76,6 +76,57 @@ class App {
         if (generatePortfolioBtn) {
             generatePortfolioBtn.addEventListener('click', () => this.generatePortfolio());
         }
+
+        // Botón de Backtest
+        const runBacktestBtn = document.getElementById('runBacktestBtn');
+        if (runBacktestBtn) {
+            runBacktestBtn.addEventListener('click', () => this.runBacktest());
+        }
+    }
+
+    /**
+     * Ejecuta el Backtest
+     */
+    async runBacktest() {
+        const symbol = document.getElementById('backtestSymbol').value;
+        const days = document.getElementById('backtestPeriod').value;
+        const btn = document.getElementById('runBacktestBtn');
+        const stats = document.getElementById('backtestStats');
+
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Simulando...';
+
+            const result = await api.runBacktest(symbol, days);
+
+            // Mostrar estadísticas
+            stats.style.display = 'flex';
+
+            const stratReturn = result.return_pct;
+            const benchReturn = result.benchmark_return_pct;
+
+            const stratEl = document.getElementById('btStrategyReturn');
+            stratEl.textContent = `${stratReturn.toFixed(2)}%`;
+            stratEl.className = `value ${stratReturn >= 0 ? 'positive' : 'negative'}`;
+
+            const benchEl = document.getElementById('btBenchmarkReturn');
+            benchEl.textContent = `${benchReturn.toFixed(2)}%`;
+            benchEl.className = `value ${benchReturn >= 0 ? 'positive' : 'negative'}`;
+
+            document.getElementById('btTradeCount').textContent = result.trades.length;
+
+            // Renderizar gráfico
+            chartManager.createBacktestChart('backtestChartContainer', result.equity_curve, result.benchmark_curve);
+
+            this.showToast('success', 'Simulación completada');
+
+        } catch (error) {
+            console.error(error);
+            this.showToast('error', 'Error al ejecutar la simulación');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="btn-icon">▶️</span> Simular';
+        }
     }
 
     /**

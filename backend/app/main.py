@@ -174,35 +174,52 @@ async def trigger_analysis():
 @app.get("/api/debug-network", tags=["General"])
 async def debug_network():
     """
-    Endpoint de depuración para probar conectividad de red.
+    Prueba conectividad de red (DNS y Puertos) para depurar errores en Render.
     """
-    import socket
     results = {}
     
-    # Test DNS resolution
+    # 1. DNS Resolution
     try:
+        import socket
         ip = socket.gethostbyname("smtp.gmail.com")
-        results["dns_resolution"] = f"Success: {ip}"
+        results["dns_gmail"] = f"OK ({ip})"
     except Exception as e:
-        results["dns_resolution"] = f"Failed: {e}"
+        results["dns_gmail"] = f"FAIL: {e}"
         
-    # Test Port 587
-    try:
-        sock = socket.create_connection(("smtp.gmail.com", 587), timeout=5)
-        sock.close()
-        results["port_587"] = "Open"
-    except Exception as e:
-        results["port_587"] = f"Closed/Blocked: {e}"
-        
-    # Test Port 465
-    try:
-        sock = socket.create_connection(("smtp.gmail.com", 465), timeout=5)
-        sock.close()
-        results["port_465"] = "Open"
-    except Exception as e:
-        results["port_465"] = f"Closed/Blocked: {e}"
-        
+    # 2. Port Connectivity
+    ports = [587, 465, 443]
+    for port in ports:
+        try:
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(2)
+            result = sock.connect_ex(('smtp.gmail.com', port))
+            if result == 0:
+                results[f"port_{port}"] = "OPEN"
+            else:
+                results[f"port_{port}"] = f"CLOSED (Code {result})"
+            sock.close()
+        except Exception as e:
+            results[f"port_{port}"] = f"ERROR: {e}"
+            
     return results
+
+
+# --- BACKTEST ENDPOINT ---
+@app.post("/api/backtest", tags=["General"])
+async def run_backtest(request: dict):
+    """
+    Ejecuta una simulación de backtesting.
+    Body: { "symbol": "VOO", "days": 365 }
+    """
+    try:
+        symbol = request.get("symbol", "VOO")
+        days = int(request.get("days", 365))
+        
+        result = BacktestService.run_backtest(symbol, days)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Manejo de errores global

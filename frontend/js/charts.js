@@ -100,6 +100,50 @@ class ChartManager {
     }
 
     /**
+     * Crea el gráfico de Backtest (Comparativa)
+     */
+    createBacktestChart(containerId, strategyData, benchmarkData) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        // Limpiar
+        container.innerHTML = '';
+
+        const chart = LightweightCharts.createChart(container, {
+            layout: { textColor: '#d1d4dc', background: { type: 'solid', color: '#1e222d' } },
+            grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
+            rightPriceScale: { borderColor: '#2B2B43' },
+            timeScale: { borderColor: '#2B2B43' },
+        });
+
+        // Línea Estrategia (Verde)
+        const strategySeries = chart.addLineSeries({
+            color: '#26a69a',
+            lineWidth: 2,
+            title: 'Estrategia IA',
+        });
+        strategySeries.setData(strategyData);
+
+        // Línea Benchmark (Gris/Azul)
+        const benchmarkSeries = chart.addLineSeries({
+            color: '#2962FF',
+            lineWidth: 2,
+            lineStyle: 2, // Dashed
+            title: 'Buy & Hold',
+        });
+        benchmarkSeries.setData(benchmarkData);
+
+        chart.timeScale().fitContent();
+
+        // Resize observer
+        new ResizeObserver(entries => {
+            if (entries.length === 0) return;
+            const newRect = entries[0].contentRect;
+            chart.applyOptions({ height: newRect.height, width: newRect.width });
+        }).observe(container);
+    }
+
+    /**
      * Gráfico de Confianza (Mantenemos Chart.js para este gráfico simple de barras si es necesario,
      * o lo eliminamos si ya no encaja en el diseño. Por ahora lo dejamos comentado o simplificado).
      */

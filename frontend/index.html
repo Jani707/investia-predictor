@@ -234,6 +234,52 @@
             </div>
         </section>
 
+        <!-- Backtest Section -->
+        <section id="backtest" class="section">
+            <h2 class="section-title">
+                <span class="title-icon">🧪</span>
+                Backtesting (Máquina del Tiempo)
+            </h2>
+            <p class="section-subtitle">Simula cómo le habría ido a esta estrategia en el pasado vs. comprar y mantener.
+            </p>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <select id="backtestSymbol" class="select-input">
+                        <option value="VOO">VOO - S&P 500</option>
+                        <option value="QQQ">QQQ - Nasdaq 100</option>
+                        <option value="BTC-USD">BTC - Bitcoin</option>
+                        <option value="TSLA">TSLA - Tesla</option>
+                    </select>
+                    <select id="backtestPeriod" class="select-input">
+                        <option value="180">6 Meses</option>
+                        <option value="365" selected>1 Año</option>
+                        <option value="730">2 Años</option>
+                    </select>
+                    <button id="runBacktestBtn" class="btn btn-primary">
+                        <span class="btn-icon">▶️</span> Simular
+                    </button>
+                </div>
+
+                <div class="backtest-stats" id="backtestStats" style="display: none;">
+                    <div class="stat-pill">
+                        <span class="label">Retorno Estrategia:</span>
+                        <span class="value" id="btStrategyReturn">--%</span>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="label">Retorno Mercado:</span>
+                        <span class="value" id="btBenchmarkReturn">--%</span>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="label">Trades:</span>
+                        <span class="value" id="btTradeCount">0</span>
+                    </div>
+                </div>
+
+                <div id="backtestChartContainer" class="chart-wrapper" style="height: 400px; position: relative;"></div>
+            </div>
+        </section>
+
         <!-- Assets Section -->
         <section id="assets" class="section">
             <h2 class="section-title">
