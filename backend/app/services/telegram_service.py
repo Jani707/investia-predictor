@@ -3,7 +3,7 @@ from app.config import TELEGRAM_CONFIG
 
 class TelegramService:
     @staticmethod
-    def send_message(message: str) -> bool:
+    def send_message(message: str) -> tuple[bool, str]:
         """
         Envía un mensaje a través del bot de Telegram.
         
@@ -11,14 +11,17 @@ class TelegramService:
             message: El texto del mensaje a enviar.
             
         Returns:
-            True si el envío fue exitoso, False si falló.
+            Tuple (success, detail): 
+            - success: True si el envío fue exitoso, False si falló.
+            - detail: Mensaje de éxito o descripción del error.
         """
         token = TELEGRAM_CONFIG["bot_token"]
         chat_id = TELEGRAM_CONFIG["chat_id"]
         
         if not token or not chat_id:
-            print("⚠️ Telegram credentials not configured.")
-            return False
+            msg = "⚠️ Telegram credentials not configured (Token or Chat ID missing)."
+            print(msg)
+            return False, msg
             
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         payload = {
@@ -30,8 +33,10 @@ class TelegramService:
         try:
             response = requests.post(url, json=payload, timeout=10)
             response.raise_for_status()
-            print(f"✅ Telegram message sent to {chat_id}")
-            return True
+            return True, "Message sent successfully"
         except Exception as e:
-            print(f"❌ Error sending Telegram message: {e}")
-            return False
+            error_msg = f"Telegram Error: {str(e)}"
+            if hasattr(e, 'response') and e.response is not None:
+                error_msg += f" | Response: {e.response.text}"
+            print(f"❌ {error_msg}")
+            return False, error_msg

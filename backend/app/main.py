@@ -38,7 +38,9 @@ async def run_market_analysis_loop():
                 body += "_Recuerda: Esto es una sugerencia basada en algoritmos. Haz tu propia investigación._"
                 
                 # Enviar por Telegram
-                TelegramService.send_message(body)
+                success, msg = TelegramService.send_message(body)
+                if not success:
+                    print(f"⚠️ Failed to send Telegram notification: {msg}")
             else:
                 print("😴 No opportunities found this time.")
                 
@@ -124,17 +126,20 @@ async def test_telegram():
     Endpoint de prueba para forzar el envío de un mensaje a Telegram.
     """
     try:
-        success = TelegramService.send_message(
+        success, message = TelegramService.send_message(
             "🔔 *Test InvestIA*\n\nSi lees esto, ¡tu bot de Telegram está conectado correctamente! 🚀"
         )
         
         if success:
             return {"status": "success", "message": "Mensaje de prueba enviado a Telegram"}
         else:
-            raise HTTPException(status_code=500, detail="Fallo al enviar mensaje. Revisa el Token y Chat ID.")
+            # Devolver el error específico que nos dio el servicio
+            raise HTTPException(status_code=500, detail=f"Fallo Telegram: {message}")
             
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
 
 
 @app.post("/api/trigger-analysis", tags=["General"])
