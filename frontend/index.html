@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="InvestIA Predictor - Predicciones de inversión con inteligencia artificial">
+    <title>InvestIA Predictor | Inversiones Inteligentes</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">📈</span>
+                <span class="logo-text">InvestIA</span>
+                <span class="logo-badge">Predictor</span>
+            </div>
+            <nav class="nav">
+                <a href="#dashboard" class="nav-link active">Dashboard</a>
+                <a href="#predictions" class="nav-link">Predicciones</a>
+                <a href="#portfolio" class="nav-link">Portafolio</a>
+                <a href="#assets" class="nav-link">Activos</a>
+            </nav>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <span class="btn-icon">🔄</span> Actualizar
+                </button>
+                <div class="status-indicator" id="apiStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Conectando...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon positive">📊</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="totalAssets">6</span>
+                        <span class="stat-label">Activos Monitoreados</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">🎯</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="avgAccuracy">--%</span>
+                        <span class="stat-label">Precisión Promedio</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">📈</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="bullishCount">--</span>
+                        <span class="stat-label">Señales Alcistas</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">🕐</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="lastUpdate">--:--</span>
+                        <span class="stat-label">Última Actualización</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictions Grid -->
+            <h2 class="section-title">
+                <span class="title-icon">🎯</span>
+                Predicciones en Tiempo Real
+            </h2>
+
+            <div class="predictions-grid" id="predictionsGrid">
+                <!-- Se llena dinámicamente -->
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando predicciones...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section id="predictions" class="section">
+            <h2 class="section-title">
+                <span class="title-icon">📊</span>
+                Análisis Detallado
+            </h2>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <select id="assetSelector" class="select-input">
+                        <option value="VOO">VOO - Vanguard S&P 500</option>
+                        <option value="VTI">VTI - Total Stock Market</option>
+                        <option value="BND">BND - Total Bond Market</option>
+                        <option value="SCHD">SCHD - Dividend Equity</option>
+                        <option value="VNQ">VNQ - Real Estate</option>
+                        <option value="GLD">GLD - Gold Shares</option>
+                        <optgroup label="Riesgo Medio">
+                            <option value="QQQ">QQQ - Nasdaq 100</option>
+                            <option value="VIG">VIG - Dividend Appreciation</option>
+                            <option value="IWM">IWM - Russell 2000</option>
+                        </optgroup>
+                        <optgroup label="Riesgo Alto">
+                            <option value="ARKK">ARKK - Innovation ETF</option>
+                            <option value="SOXL">SOXL - Semi Bull 3X</option>
+                            <option value="TQQQ">TQQQ - Nasdaq 100 3X</option>
+                        </optgroup>
+                    </select>
+                    <div class="chart-period-selector">
+                        <button class="period-btn active" data-days="30">30D</button>
+                        <button class="period-btn" data-days="60">60D</button>
+                        <button class="period-btn" data-days="90">90D</button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Confidence Chart -->
+            <div class="chart-container">
+                <h3 class="chart-title">Confianza del Modelo por Activo</h3>
+                <div class="chart-wrapper chart-small">
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        </div>
+        </section>
+
+        <!-- Portfolio Section -->
+        <section id="portfolio" class="section">
+            <h2 class="section-title">
+                <span class="title-icon">💼</span>
+                Generador de Portafolio
+            </h2>
+
+            <div class="portfolio-container">
+                <div class="portfolio-controls">
+                    <div class="control-group">
+                        <label>Perfil de Riesgo</label>
+                        <select id="riskProfile" class="select-input">
+                            <option value="low">Bajo Riesgo (Conservador)</option>
+                            <option value="medium" selected>Riesgo Medio (Moderado)</option>
+                            <option value="high">Alto Riesgo (Agresivo)</option>
+                            <option value="mixed">Diversificado (Mix)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Monto a Invertir (USD)</label>
+                        <input type="number" id="investAmount" class="select-input" value="10000" min="1000" step="100">
+                    </div>
+
+                    <button id="generatePortfolioBtn" class="btn btn-primary">
+                        <span class="btn-icon">✨</span> Generar Propuesta
+                    </button>
+                </div>
+
+                <div id="portfolioResults" class="portfolio-results" style="display: none;">
+                    <div class="portfolio-summary">
+                        <div class="chart-wrapper chart-small">
+                            <canvas id="allocationChart"></canvas>
+                        </div>
+                        <div class="portfolio-details">
+                            <h3>Propuesta de Asignación</h3>
+                            <table class="assets-table">
+                                <thead>
+                                    <tr>
+                                        <th>Activo</th>
+                                        <th>Peso</th>
+                                        <th>Inversión</th>
+                                        <th>Acciones Est.</th>
+                                        <th>Utilidades Recientes</th>
+                                        <th>Justificación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allocationTableBody">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assets Section -->
+        <section id="assets" class="section">
+            <h2 class="section-title">
+                <span class="title-icon">💼</span>
+                Activos Disponibles
+            </h2>
+
+            <div class="assets-table-container">
+                <table class="assets-table">
+                    <thead>
+                        <tr>
+                            <th>Símbolo</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Tipo</th>
+                            <th>Riesgo</th>
+                            <th>Precio Actual</th>
+                            <th>Predicción 5D</th>
+                            <th>Recomendación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assetsTableBody">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Disclaimer Footer -->
+    <footer class="footer">
+        <div class="disclaimer">
+            <h4>⚠️ Aviso Legal</h4>
+            <p>Las predicciones generadas por InvestIA Predictor son únicamente para fines informativos y educativos.
+                No constituyen asesoría financiera profesional. Las inversiones en mercados financieros conllevan
+                riesgos,
+                incluyendo la posible pérdida del capital invertido. Realice su propia investigación antes de invertir.
+            </p>
+        </div>
+        <div class="footer-info">
+            <p>InvestIA Predictor v1.0 | Powered by LSTM Neural Networks</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/api.js?v=2"></script>
+    <script src="js/charts.js?v=2"></script>
+    <script src="js/app.js?v=2"></script>
+</body>
+
+</html>
