@@ -129,7 +129,32 @@ class AnalysisService:
             
         except Exception as e:
             print(f"⚠️ Error analyzing {symbol}: {e}")
-            return None
+            # Fallback: Generar datos sintéticos para demostración si falla la API
+            print(f"⚠️ Using fallback mock data for {symbol}")
+            import random
+            base_price = 100.0
+            if symbol == "VOO": base_price = 450.0
+            elif symbol == "VTI": base_price = 230.0
+            elif symbol == "BND": base_price = 75.0
+            
+            mock_price = base_price * (1 + random.uniform(-0.05, 0.05))
+            mock_score = random.uniform(-1, 3)
+            
+            rec = "MANTENER"
+            if mock_score >= 2: rec = "COMPRAR"
+            elif mock_score <= -1: rec = "VENDER"
+            
+            return {
+                "symbol": symbol,
+                "name": symbol,
+                "current_price": mock_price,
+                "recommendation": rec,
+                "score": mock_score,
+                "reasons": ["Datos simulados (API Error)", "Análisis técnico aproximado"],
+                "sentiment": {"label": "Neutral", "score": 0.0},
+                "risk": "medium",
+                "is_mock": True
+            }
 
     @staticmethod
     def analyze_market():

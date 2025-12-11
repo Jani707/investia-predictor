@@ -20,24 +20,28 @@ python train.py --all
 
 ---
 
-### Iniciar el Sistema
+### Iniciar el Sistema (Local)
 
-**Terminal 1 - Backend:**
+**Solo necesitas una terminal:**
 ```bash
-cd .
-source venv/bin/activate
 cd backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-**Terminal 2 - Frontend** (abre nueva Terminal con Cmd+N):
-```bash
-cd frontend
-python3 -m http.server 8001
-```
+*   El Backend iniciará en `http://localhost:8000`
+*   El Frontend ahora se sirve automáticamente en la misma dirección: `http://localhost:8000`
 
-**Abrir Dashboard:**
-Ve a tu navegador y escribe: `http://localhost:8001`
+---
+
+### 🚀 Despliegue en Render
+
+Este proyecto ahora está configurado para desplegarse como un **único Web Service**.
+
+1.  **Build Command:** `pip install -r backend/requirements.txt`
+2.  **Start Command:** `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+3.  **Root Directory:** `.` (La raíz del repo)
+
+¡No necesitas desplegar el frontend por separado!
 
 ---
 

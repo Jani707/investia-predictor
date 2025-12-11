@@ -1,17 +1,17 @@
 {
   "symbol": "SCHD",
   "name": "Schwab US Dividend Equity ETF",
-  "trained_at": "2025-12-10T12:08:24.256194",
-  "epochs_completed": 10,
-  "final_loss": 0.04619520530104637,
-  "final_val_loss": 0.036199189722537994,
+  "trained_at": "2025-12-11T09:04:55.086711",
+  "epochs_completed": 59,
+  "final_loss": 0.015412750653922558,
+  "final_val_loss": 0.018062397837638855,
   "metrics": {
-    "loss": 0.036199189722537994,
-    "mae": 0.17167946696281433,
-    "rmse": 0.19026084872841023,
-    "directional_accuracy": 0.5844155844155844
+    "loss": 0.010416228324174881,
+    "mae": 0.0857563316822052,
+    "rmse": 0.10205991753627834,
+    "directional_accuracy": 0.4805194805194805
   },
-  "data_points": 500,
-  "train_samples": 309,
+  "data_points": 502,
+  "train_samples": 311,
   "test_samples": 78
 }

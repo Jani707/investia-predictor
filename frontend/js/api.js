@@ -3,9 +3,7 @@
  * Maneja todas las comunicaciones con el backend FastAPI
  */
 
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:8000/api'
-    : 'https://investia-predictor.onrender.com/api'; // URL real del backend desplegado
+const API_BASE_URL = '/api';
 
 class APIClient {
     constructor(baseUrl = API_BASE_URL) {

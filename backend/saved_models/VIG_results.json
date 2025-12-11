@@ -1,14 +1,14 @@
 {
   "symbol": "VIG",
   "name": "Vanguard Dividend Appreciation",
-  "trained_at": "2025-12-10T12:13:58.880331",
-  "epochs_completed": 10,
-  "final_loss": 0.042610395699739456,
-  "final_val_loss": 0.43305426836013794,
+  "trained_at": "2025-12-10T22:42:28.541805",
+  "epochs_completed": 83,
+  "final_loss": 0.007504316046833992,
+  "final_val_loss": 0.04720476642251015,
   "metrics": {
-    "loss": 0.43305426836013794,
-    "mae": 0.6536297798156738,
-    "rmse": 0.658068588954592,
+    "loss": 0.03942163661122322,
+    "mae": 0.1896388679742813,
+    "rmse": 0.19854883417475516,
     "directional_accuracy": 0.45454545454545453
   },
   "data_points": 502,

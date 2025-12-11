@@ -269,3 +269,34 @@ async def general_exception_handler(request, exc):
             "detail": str(exc)
         }
     )
+
+# --- DEBUG YFINANCE ---
+@app.get("/api/debug-yfinance", tags=["General"])
+async def debug_yfinance():
+    """Prueba la conexión con Yahoo Finance."""
+    try:
+        import yfinance as yf
+        ticker = yf.Ticker("VOO")
+        hist = ticker.history(period="1d")
+        if hist.empty:
+            return {"status": "error", "message": "No data received from Yahoo Finance"}
+        return {
+            "status": "success", 
+            "last_price": float(hist["Close"].iloc[-1]),
+            "symbol": "VOO"
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# --- STATIC FILES (FRONTEND) ---
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Determinar ruta absoluta al frontend
+# Estamos en backend/app/main.py -> parent.parent es backend -> parent.parent.parent es root -> + frontend
+frontend_path = Path(__file__).resolve().parent.parent.parent / "frontend"
+
+if frontend_path.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+else:
+    print(f"⚠️ Frontend directory not found at {frontend_path}")
