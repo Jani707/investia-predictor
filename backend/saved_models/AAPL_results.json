@@ -1,15 +1,15 @@
 {
   "symbol": "AAPL",
   "name": "Apple Inc.",
-  "trained_at": "2025-12-10T12:25:34.322638",
-  "epochs_completed": 10,
-  "final_loss": 0.03820205479860306,
-  "final_val_loss": 0.2752918601036072,
+  "trained_at": "2025-12-11T09:29:43.326401",
+  "epochs_completed": 80,
+  "final_loss": 0.011752882972359657,
+  "final_val_loss": 0.10552625358104706,
   "metrics": {
-    "loss": 0.2752918601036072,
-    "mae": 0.5123661756515503,
-    "rmse": 0.5246826351990297,
-    "directional_accuracy": 0.5584415584415584
+    "loss": 0.09928631037473679,
+    "mae": 0.27619078755378723,
+    "rmse": 0.3150972967577478,
+    "directional_accuracy": 0.5324675324675324
   },
   "data_points": 502,
   "train_samples": 311,

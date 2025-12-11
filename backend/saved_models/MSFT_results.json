@@ -1,14 +1,14 @@
 {
   "symbol": "MSFT",
   "name": "Microsoft Corp.",
-  "trained_at": "2025-12-10T12:26:58.248419",
-  "epochs_completed": 10,
-  "final_loss": 0.04090666025876999,
-  "final_val_loss": 0.4015267789363861,
+  "trained_at": "2025-12-11T09:31:53.514198",
+  "epochs_completed": 77,
+  "final_loss": 0.011006149463355541,
+  "final_val_loss": 0.06331049650907516,
   "metrics": {
-    "loss": 0.4015267789363861,
-    "mae": 0.6288377642631531,
-    "rmse": 0.633661377879346,
+    "loss": 0.03668376803398132,
+    "mae": 0.16029269993305206,
+    "rmse": 0.19153007787432152,
     "directional_accuracy": 0.4935064935064935
   },
   "data_points": 502,

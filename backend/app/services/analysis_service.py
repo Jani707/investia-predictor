@@ -156,10 +156,52 @@ class AnalysisService:
                 "is_mock": True
             }
 
+    _cache = []
+    _cache_file = "predictions_cache.json"
+
     @staticmethod
-    def analyze_market():
+    def get_cached_predictions():
+        """
+        Devuelve las predicciones en caché. Si está vacía, intenta cargar de disco.
+        """
+        if not AnalysisService._cache:
+            import json
+            import os
+            if os.path.exists(AnalysisService._cache_file):
+                try:
+                    with open(AnalysisService._cache_file, 'r') as f:
+                        AnalysisService._cache = json.load(f)
+                        print(f"📂 Loaded {len(AnalysisService._cache)} predictions from disk cache.")
+                except Exception as e:
+                    print(f"⚠️ Failed to load cache from disk: {e}")
+        
+        return AnalysisService._cache
+
+    @staticmethod
+    def update_cache():
+        """
+        Ejecuta el análisis y actualiza la caché.
+        """
+        print("🔄 Updating prediction cache...")
+        predictions = AnalysisService.analyze_market(return_all=True)
+        AnalysisService._cache = predictions
+        
+        # Guardar en disco
+        try:
+            import json
+            with open(AnalysisService._cache_file, 'w') as f:
+                json.dump(predictions, f)
+            print("💾 Cache saved to disk.")
+        except Exception as e:
+            print(f"⚠️ Failed to save cache to disk: {e}")
+            
+        return predictions
+
+    @staticmethod
+    def analyze_market(return_all=False):
         print("🔍 Analyzing market for opportunities...")
         opportunities = []
+        all_results = []
         
         macro = AnalysisService.get_macro_context()
         custom_symbols = WatchlistService.get_watchlist()
@@ -167,7 +209,17 @@ class AnalysisService:
         
         for symbol in all_symbols:
             result = AnalysisService.analyze_symbol(symbol, macro)
-            if result and (result['recommendation'] != "MANTENER" or symbol in custom_symbols):
-                opportunities.append(result)
+            if result:
+                # Para la caché queremos todo, pero con un flag de "oportunidad"
+                is_opportunity = (result['recommendation'] != "MANTENER" or symbol in custom_symbols)
+                result['is_opportunity'] = is_opportunity
                 
+                all_results.append(result)
+                
+                if is_opportunity:
+                    opportunities.append(result)
+        
+        if return_all:
+            return all_results
+            
         return opportunities

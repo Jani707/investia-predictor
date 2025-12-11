@@ -18,6 +18,8 @@ router = APIRouter()
 predictor = Predictor()
 
 
+from app.services.analysis_service import AnalysisService
+
 @router.get("/predict/all")
 async def predict_all():
     """
@@ -26,7 +28,20 @@ async def predict_all():
     Returns:
         Lista de predicciones ordenadas por potencial de ganancia
     """
-    predictions = predictor.predict_all()
+    # Usar caché para respuesta instantánea
+    predictions = AnalysisService.get_cached_predictions()
+    
+    # Si la caché está vacía (primer arranque), devolver lista vacía pero con status 202 (Accepted)
+    # O simplemente vacía para que el frontend no rompa, pero indicando que cargue de nuevo
+    if not predictions:
+        print("⚠️ Cache miss in /predict/all. Returning empty list.")
+        return {
+            "predictions": [],
+            "failed": [],
+            "total": 0,
+            "successful_count": 0,
+            "status": "loading"
+        }
     
     successful = [p for p in predictions if p.get("success")]
     failed = [p for p in predictions if not p.get("success")]

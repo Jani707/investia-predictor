@@ -1,15 +1,15 @@
 {
   "symbol": "NVDA",
   "name": "NVIDIA Corp.",
-  "trained_at": "2025-12-10T12:31:08.130877",
-  "epochs_completed": 10,
-  "final_loss": 0.04579742252826691,
-  "final_val_loss": 0.48086121678352356,
+  "trained_at": "2025-12-11T09:39:25.697182",
+  "epochs_completed": 52,
+  "final_loss": 0.007221729960292578,
+  "final_val_loss": 0.09414606541395187,
   "metrics": {
-    "loss": 0.48086121678352356,
-    "mae": 0.6879695057868958,
-    "rmse": 0.6934415894190519,
-    "directional_accuracy": 0.4805194805194805
+    "loss": 0.06573425978422165,
+    "mae": 0.23101761937141418,
+    "rmse": 0.2563869208449916,
+    "directional_accuracy": 0.5064935064935064
   },
   "data_points": 502,
   "train_samples": 311,
