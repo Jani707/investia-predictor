@@ -191,6 +191,13 @@ class App {
     async loadPredictions() {
         try {
             const response = await api.getAllPredictions();
+
+            // Manejar estado de carga (cache warming)
+            if (response.status === 'loading') {
+                this.showLoadingState();
+                return;
+            }
+
             this.predictions = response.predictions || [];
 
             // Actualizar UI
@@ -210,6 +217,32 @@ class App {
             // Mostrar estado de error
             this.showNoPredictions();
         }
+    }
+
+    /**
+     * Muestra estado de carga cuando el backend está procesando
+     */
+    showLoadingState() {
+        const grid = document.getElementById('predictionsGrid');
+        if (!grid) return;
+
+        grid.innerHTML = `
+            <div class="loading-container">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+                <h3>Analizando Mercado...</h3>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                    Nuestros algoritmos están procesando los datos en tiempo real.
+                    <br>Por favor espera un momento...
+                </p>
+                <div class="loader" style="margin: 2rem auto; border: 4px solid var(--bg-secondary); border-top: 4px solid var(--accent-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+                <style>
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                </style>
+            </div>
+        `;
+
+        // Reintentar automáticamente en 5 segundos
+        setTimeout(() => this.loadPredictions(), 5000);
     }
 
     /**
