@@ -25,7 +25,9 @@ async def run_market_analysis_loop():
     while True:
         try:
             print("\n⏰ Starting scheduled market analysis...")
-            opportunities = AnalysisService.analyze_market()
+            # Ejecutar en un thread separado para no bloquear el loop principal
+            loop = asyncio.get_running_loop()
+            opportunities = await loop.run_in_executor(None, AnalysisService.analyze_market)
             
             if opportunities:
                 print(f"✨ Found {len(opportunities)} opportunities!")
