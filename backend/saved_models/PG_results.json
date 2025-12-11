@@ -1,15 +1,15 @@
 {
   "symbol": "PG",
   "name": "Procter & Gamble",
-  "trained_at": "2025-12-10T12:24:11.845090",
-  "epochs_completed": 10,
-  "final_loss": 0.06802428513765335,
-  "final_val_loss": 0.05062204599380493,
+  "trained_at": "2025-12-11T09:26:50.188627",
+  "epochs_completed": 37,
+  "final_loss": 0.024277694523334503,
+  "final_val_loss": 0.027269748970866203,
   "metrics": {
-    "loss": 0.05062204599380493,
-    "mae": 0.19451670348644257,
-    "rmse": 0.22499344666502874,
-    "directional_accuracy": 0.4805194805194805
+    "loss": 0.023086676374077797,
+    "mae": 0.11541730910539627,
+    "rmse": 0.15194300682913403,
+    "directional_accuracy": 0.4025974025974026
   },
   "data_points": 502,
   "train_samples": 311,
