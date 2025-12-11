@@ -71,11 +71,8 @@ class Predictor:
         """
         # Asegurar que el modelo está cargado
         if not self.load_model(symbol):
-            return {
-                "symbol": symbol,
-                "error": "Modelo no disponible",
-                "success": False
-            }
+            print(f"⚠️ Model for {symbol} not found. Falling back to Rule-Based Analysis.")
+            return self._predict_rule_based(symbol)
         
         try:
             # Obtener datos recientes
