@@ -488,7 +488,8 @@ class App {
             await this.loadInitialData();
             this.showToast('success', 'Datos actualizados correctamente');
         } catch (error) {
-            this.showToast('error', 'Error al actualizar los datos');
+            console.error('Refresh error:', error);
+            this.showToast('error', `Error: ${error.message || 'No se pudo conectar'}`);
         } finally {
             if (refreshBtn) {
                 refreshBtn.disabled = false;
