@@ -92,7 +92,7 @@ app.include_router(assets.router, prefix="/api", tags=["Activos"])
 app.include_router(portfolio.router, prefix="/api", tags=["Portafolio"])
 
 
-@app.get("/", tags=["General"])
+@app.get("/api/info", tags=["General"])
 async def root():
     """Endpoint raíz con información de la API."""
     return {

@@ -247,5 +247,6 @@ ANALYSIS_CONFIG = {
     "macd_threshold": 0,          # MACD Line > Signal Line (cruce alcista)
     "bollinger_std_dev": 2.0,     # Desviaciones estándar para bandas
     "sma_fast": 50,               # Media móvil rápida
-    "sma_slow": 200               # Media móvil lenta
+    "sma_slow": 200,              # Media móvil lenta
+    "tickers": list(ASSETS.keys()) # Lista de tickers para análisis
 }

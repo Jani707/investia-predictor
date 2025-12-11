@@ -1,15 +1,15 @@
 {
   "symbol": "GLD",
   "name": "SPDR Gold Shares",
-  "trained_at": "2025-12-10T22:36:14.043048",
-  "epochs_completed": 51,
-  "final_loss": 0.006725808139890432,
-  "final_val_loss": 0.0953330472111702,
+  "trained_at": "2025-12-11T09:09:34.092383",
+  "epochs_completed": 73,
+  "final_loss": 0.00404328154399991,
+  "final_val_loss": 0.09138599038124084,
   "metrics": {
-    "loss": 0.08367057144641876,
-    "mae": 0.2676067650318146,
-    "rmse": 0.28925865765458625,
-    "directional_accuracy": 0.5974025974025974
+    "loss": 0.08435273170471191,
+    "mae": 0.2665601968765259,
+    "rmse": 0.2904354151957224,
+    "directional_accuracy": 0.5324675324675324
   },
   "data_points": 502,
   "train_samples": 311,

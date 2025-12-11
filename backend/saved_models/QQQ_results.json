@@ -1,15 +1,15 @@
 {
   "symbol": "QQQ",
   "name": "Invesco QQQ Trust",
-  "trained_at": "2025-12-10T22:38:45.349615",
-  "epochs_completed": 73,
-  "final_loss": 0.006688138470053673,
-  "final_val_loss": 0.049968793988227844,
+  "trained_at": "2025-12-11T09:11:26.924508",
+  "epochs_completed": 53,
+  "final_loss": 0.010338946245610714,
+  "final_val_loss": 0.1628032773733139,
   "metrics": {
-    "loss": 0.048421747982501984,
-    "mae": 0.20576973259449005,
-    "rmse": 0.22004941648826928,
-    "directional_accuracy": 0.4025974025974026
+    "loss": 0.12747974693775177,
+    "mae": 0.35037314891815186,
+    "rmse": 0.35704306943394365,
+    "directional_accuracy": 0.45454545454545453
   },
   "data_points": 502,
   "train_samples": 311,
