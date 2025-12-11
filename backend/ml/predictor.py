@@ -264,6 +264,67 @@ class Predictor:
             }
 
 
+    def _predict_rule_based(self, symbol: str) -> Dict:
+        """
+        Genera una predicción basada en reglas (fallback cuando no hay modelo ML).
+        """
+        from app.services.analysis_service import AnalysisService
+        
+        analysis = AnalysisService.analyze_symbol(symbol)
+        
+        if not analysis:
+            return {
+                "symbol": symbol,
+                "error": "No se pudo analizar el activo (Datos insuficientes)",
+                "success": False
+            }
+            
+        # Generar predicciones sintéticas basadas en el score
+        current_price = analysis["current_price"]
+        score = analysis["score"]
+        
+        # Factor de proyección (muy simplificado)
+        daily_change = 0
+        if score >= 2.5: daily_change = 0.005 # +0.5% diario
+        elif score >= 1: daily_change = 0.002 # +0.2% diario
+        elif score <= -2: daily_change = -0.005 # -0.5% diario
+        elif score <= -1: daily_change = -0.002 # -0.2% diario
+        
+        predictions = []
+        price = current_price
+        
+        for i in range(5):
+            price = price * (1 + daily_change)
+            change_pct = ((price - current_price) / current_price) * 100
+            predictions.append({
+                "day": i + 1,
+                "predicted_price": price,
+                "change_percent": change_pct
+            })
+            
+        return {
+            "symbol": symbol,
+            "name": ASSETS.get(symbol, {}).get("name", symbol),
+            "description": ASSETS.get(symbol, {}).get("description", "Análisis Técnico"),
+            "current_price": current_price,
+            "predictions": predictions,
+            "average_change_percent": predictions[-1]["change_percent"], # Cambio a 5 días
+            "trend": "bullish" if score > 0 else "bearish" if score < 0 else "neutral",
+            "recommendation": analysis["recommendation"],
+            "confidence": {
+                "score": 0.7 if abs(score) > 2 else 0.5,
+                "level": "medium",
+                "directional_accuracy": 0.0, # No aplica
+                "details": "Basado en Análisis Técnico (RSI, MACD, Sentimiento)"
+            },
+            "sentiment": analysis.get("sentiment"),
+            "generated_at": datetime.now().isoformat(),
+            "prediction_days": 5,
+            "success": True,
+            "is_fallback": True
+        }
+
+
 if __name__ == "__main__":
     # Test del módulo
     print("\n=== Test de Predictor ===\n")
