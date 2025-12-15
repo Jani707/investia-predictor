@@ -172,45 +172,65 @@ class AnalysisService:
             
         except Exception as e:
             print(f"⚠️ Error analyzing {symbol}: {e}")
-            # Fallback: Generar datos sintéticos para demostración si falla la API
-            print(f"⚠️ Using fallback mock data for {symbol}")
+            # Fallback: Generar datos sintéticos REALISTAS (Random Walk)
+            print(f"⚠️ Using realistic fallback mock data for {symbol}")
             import random
-            base_price = 100.0
-            if symbol == "VOO": base_price = 450.0
-            elif symbol == "VTI": base_price = 230.0
-            elif symbol == "BND": base_price = 75.0
+            import numpy as np
             
-            mock_price = base_price * (1 + random.uniform(-0.05, 0.05))
-            # FIX: Score neutral (-2 a 2) en lugar de sesgado positivo (-1 a 3)
+            # Precios base aproximados
+            base_prices = {
+                "VOO": 450.0, "VTI": 230.0, "BND": 75.0, "QQQ": 400.0,
+                "AAPL": 180.0, "MSFT": 370.0, "GOOGL": 140.0, "TSLA": 240.0,
+                "NVDA": 480.0, "AMD": 120.0
+            }
+            base_price = base_prices.get(symbol, 100.0)
+            
+            # 1. Generar precio actual con variación aleatoria
+            current_price = base_price * (1 + random.uniform(-0.05, 0.05))
+            
+            # 2. Generar Score aleatorio pero realista (-2 a 2)
             mock_score = random.uniform(-2, 2)
             
+            # 3. Determinar recomendación basada en score
             rec = "MANTENER"
-            if mock_score >= 2: rec = "COMPRAR"
-            elif mock_score <= -1: rec = "VENDER"
+            if mock_score >= 1.5: rec = "COMPRAR"
+            elif mock_score <= -1.5: rec = "VENDER"
             
-            # Generar predicciones sintéticas
+            # 4. Generar predicciones usando Random Walk (Geometric Brownian Motion simple)
             predictions = []
-            price = mock_price
-            daily_change = 0.003 if rec == "COMPRAR" else -0.003 if rec == "VENDER" else 0
+            price = current_price
+            
+            # Volatilidad diaria (1% a 3% dependiendo del activo)
+            volatility = 0.02 
+            if symbol in ["BND", "VTI"]: volatility = 0.008 # Menos volátil
+            elif symbol in ["TSLA", "NVDA", "AMD", "TQQQ", "SOXL"]: volatility = 0.035 # Más volátil
+            
+            # Drift (Tendencia) basado en el score
+            drift = (mock_score / 10) * volatility # Si score es 2, drift es 0.2 * vol (tendencia alcista)
             
             for i in range(5):
-                price = price * (1 + daily_change)
-                change_pct = ((price - mock_price) / mock_price) * 100
+                # Cambio aleatorio diario (distribución normal)
+                shock = np.random.normal(0, volatility)
+                daily_return = drift + shock
+                
+                price = price * (1 + daily_return)
+                change_pct = ((price - current_price) / current_price) * 100
+                
                 predictions.append({
                     "day": i + 1,
-                    "predicted_price": price,
-                    "change_percent": change_pct
+                    "predicted_price": round(price, 2),
+                    "change_percent": round(change_pct, 2)
                 })
 
             return {
                 "symbol": symbol,
                 "name": symbol,
-                "current_price": mock_price,
+                "current_price": round(current_price, 2),
                 "recommendation": rec,
-                "score": mock_score,
-                "reasons": ["⚠️ Modo Simulación (API Error)", "Datos generados aleatoriamente"],
+                "score": round(mock_score, 2),
+                "reasons": ["⚠️ Modo Simulación (API Error)", "Datos generados estocásticamente"],
                 "sentiment": {"label": "Neutral", "score": 0.0},
-                "risk": "medium",
+                "risk": "high" if volatility > 0.02 else "medium",
                 "is_mock": True,
                 "success": True,
                 "predictions": predictions,
