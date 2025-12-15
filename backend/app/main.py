@@ -38,7 +38,7 @@ async def run_market_analysis_loop():
                 body = "🚀 *Oportunidades de Inversión Detectadas:*\n\n"
                 for opp in opportunities:
                     body += f"🔹 *{opp['name']}* ({opp['symbol']})\n"
-                    body += f"   💵 Precio: ${opp['price']:.2f}\n"
+                    body += f"   💵 Precio: ${opp['current_price']:.2f}\n"
                     body += f"   📊 Razones: {', '.join(opp['reasons'])}\n\n"
                 
                 body += "_Recuerda: Esto es una sugerencia basada en algoritmos. Haz tu propia investigación._"
@@ -53,9 +53,8 @@ async def run_market_analysis_loop():
         except Exception as e:
             print(f"❌ Error in market analysis loop: {e}")
             
-        # Esperar 4 horas (14400 segundos) antes del siguiente análisis
-        # Para pruebas, se puede reducir este tiempo
-        await asyncio.sleep(14400)
+        # Esperar 15 minutos (900 segundos) antes del siguiente análisis
+        await asyncio.sleep(900)
 
 
 # Inicialización de la aplicación
@@ -68,6 +67,15 @@ async def lifespan(app: FastAPI):
     # Iniciar tarea en segundo plano
     asyncio.create_task(run_market_analysis_loop())
     
+    # Verificar modelos entrenados
+    from pathlib import Path
+    models_dir = Path("saved_models")
+    if models_dir.exists():
+        models = list(models_dir.glob("*.keras"))
+        print(f"   📂 Modelos encontrados ({len(models)}): {[m.name for m in models]}")
+    else:
+        print("   ⚠️ No se encontró directorio de modelos (saved_models)")
+
     yield
     print("\n👋 InvestIA Predictor API cerrando...")
 
@@ -223,8 +231,9 @@ async def run_backtest(request: dict):
     try:
         symbol = request.get("symbol", "VOO")
         days = int(request.get("days", 365))
+        initial_capital = float(request.get("initial_capital", 10000.0))
         
-        result = BacktestService.run_backtest(symbol, days)
+        result = BacktestService.run_backtest(symbol, days, initial_capital)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

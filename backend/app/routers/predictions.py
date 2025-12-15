@@ -20,6 +20,22 @@ predictor = Predictor()
 
 from app.services.analysis_service import AnalysisService
 
+@router.post("/predict/refresh")
+async def refresh_predictions():
+    """
+    Fuerza una actualización de las predicciones (Real-Time).
+    """
+    try:
+        print("🔄 Manual refresh triggered via API")
+        predictions = AnalysisService.update_cache()
+        return {
+            "status": "success",
+            "message": "Predicciones actualizadas correctamente",
+            "count": len(predictions)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/predict/all")
 async def predict_all():
     """

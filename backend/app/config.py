@@ -205,7 +205,7 @@ MODEL_CONFIG = {
 
 # Configuración de datos
 DATA_CONFIG = {
-    "history_period": "2y",     # 2 años de datos históricos
+    "history_period": "5y",     # 5 años de datos históricos
     "interval": "1d",           # Intervalo diario
     "features": ["Open", "High", "Low", "Close", "Volume"],
     "target": "Close"

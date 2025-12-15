@@ -12,144 +12,241 @@ class ChartManager {
     }
 
     /**
-     * Crea o actualiza el gráfico de precios (Candlestick)
+     * Crea o actualiza el gráfico de precios (Usando Chart.js)
      */
-    createPriceChart(containerId, data) {
-        const container = document.getElementById('tvChartContainer');
-        if (!container) return;
+    createPriceChart(canvasId, data) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
 
-        // Limpiar gráfico anterior si existe
+        // Destruir gráfico anterior si existe
         if (this.chart) {
-            this.chart.remove();
+            this.chart.destroy();
             this.chart = null;
         }
 
-        // Configuración del gráfico
-        const chartOptions = {
-            layout: {
-                textColor: '#d1d4dc',
-                background: { type: 'solid', color: '#1e222d' },
-            },
-            grid: {
-                vertLines: { color: '#2B2B43' },
-                horzLines: { color: '#2B2B43' },
-            },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal,
-            },
-            rightPriceScale: {
-                borderColor: '#2B2B43',
-            },
-            timeScale: {
-                borderColor: '#2B2B43',
-                timeVisible: true,
-            },
-        };
+        const ctx = canvas.getContext('2d');
 
-        // Crear instancia
-        this.chart = LightweightCharts.createChart(container, chartOptions);
+        // Preparar datasets
+        const datasets = [];
 
-        // Serie de Velas
-        this.candleSeries = this.chart.addCandlestickSeries({
-            upColor: '#26a69a',
-            downColor: '#ef5350',
-            borderVisible: false,
-            wickUpColor: '#26a69a',
-            wickDownColor: '#ef5350',
-        });
-
-        // Formatear datos para Lightweight Charts
-        // Esperamos data.dates (fechas) y data.prices (precios close)
-        // Para velas reales necesitaríamos Open, High, Low, Close.
-        // Como la API actual devuelve solo Close, simularemos velas simples o usaremos LineSeries si no hay OHLC.
-
-        // NOTA: Para este demo, convertiremos los datos lineales a formato compatible
-        // Idealmente el backend debería enviar OHLC.
-        // Usaremos LineSeries por ahora si solo tenemos Close, o simularemos velas.
-
-        // Si data tiene formato OHLC (lo ideal):
-        if (data.ohlc) {
-            this.candleSeries.setData(data.ohlc);
-        } else {
-            // Fallback a LineSeries si solo tenemos precios de cierre
-            this.chart.removeSeries(this.candleSeries);
-            this.candleSeries = this.chart.addLineSeries({
-                color: '#2962FF',
-                lineWidth: 2,
+        // 1. Precio Histórico
+        if (data.datasets && data.datasets.close) {
+            datasets.push({
+                label: 'Precio Histórico',
+                data: data.datasets.close,
+                borderColor: '#2962FF',
+                backgroundColor: 'rgba(41, 98, 255, 0.1)',
+                borderWidth: 2,
+                tension: 0.1,
+                pointRadius: 0,
+                fill: true
             });
-
-            const lineData = data.dates.map((date, index) => ({
-                time: date,
-                value: data.prices[index]
-            }));
-
-            this.candleSeries.setData(lineData);
         }
 
-        // Ajustar tamaño automáticamente
-        this.chart.timeScale().fitContent();
+        // 2. Predicciones (si existen)
+        if (data.predictions) {
+            // Necesitamos alinear las predicciones con el eje X extendido
+            // El backend devuelve labels para todo, o labels separados?
+            // Revisando historical.py: devuelve chart_data["labels"] (histórico) y chart_data["predictions"]["labels"] (futuro)
 
-        // Manejar resize
-        if (this.resizeObserver) this.resizeObserver.disconnect();
-        this.resizeObserver = new ResizeObserver(entries => {
-            if (entries.length === 0 || entries[0].target !== container) { return; }
-            const newRect = entries[0].contentRect;
-            this.chart.applyOptions({ height: newRect.height, width: newRect.width });
+            // Combinar labels
+            const allLabels = [...data.labels, ...data.predictions.labels];
+
+            // Crear array de datos de predicción alineado
+            // Llenar con nulls para la parte histórica
+            const predictionValues = new Array(data.labels.length).fill(null);
+
+            // Conectar visualmente: el último punto histórico es el primero de la predicción?
+            // Si no, habrá un hueco. Vamos a añadir el último valor histórico al inicio de la predicción
+            if (data.datasets.close.length > 0) {
+                // Reemplazar el último null con el último precio real para continuidad
+                predictionValues[predictionValues.length - 1] = data.datasets.close[data.datasets.close.length - 1];
+            }
+
+            // Añadir valores futuros
+            data.predictions.values.forEach(v => predictionValues.push(v));
+
+            datasets.push({
+                label: 'Predicción IA',
+                data: predictionValues,
+                borderColor: '#00E676',
+                borderDash: [5, 5],
+                borderWidth: 2,
+                tension: 0.1,
+                pointRadius: 2,
+                fill: false
+            });
+
+            // Actualizar labels globales
+            data.labels = allLabels;
+        }
+
+        this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#d1d4dc' }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#2B2B43' },
+                        ticks: { color: '#d1d4dc' }
+                    },
+                    y: {
+                        grid: { color: '#2B2B43' },
+                        ticks: { color: '#d1d4dc' }
+                    }
+                }
+            }
         });
-        this.resizeObserver.observe(container);
     }
 
     /**
      * Crea el gráfico de Backtest (Comparativa)
      */
-    createBacktestChart(containerId, strategyData, benchmarkData) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
+    /**
+     * Crea el gráfico de Backtest (Comparativa) usando Chart.js
+     */
+    createBacktestChart(canvasId, strategyData, benchmarkData) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
 
-        // Limpiar
-        container.innerHTML = '';
+        // Destruir gráfico anterior si existe
+        if (canvas.chartInstance) {
+            canvas.chartInstance.destroy();
+        }
 
-        const chart = LightweightCharts.createChart(container, {
-            layout: { textColor: '#d1d4dc', background: { type: 'solid', color: '#1e222d' } },
-            grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
-            rightPriceScale: { borderColor: '#2B2B43' },
-            timeScale: { borderColor: '#2B2B43' },
+        const ctx = canvas.getContext('2d');
+
+        // Extraer labels (fechas) de strategyData
+        // strategyData es [{time: '...', value: ...}, ...]
+        const labels = strategyData.map(d => d.time);
+        const strategyValues = strategyData.map(d => d.value);
+        const benchmarkValues = benchmarkData.map(d => d.value);
+
+        canvas.chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Estrategia IA',
+                        data: strategyValues,
+                        borderColor: '#00E676', // Verde
+                        backgroundColor: 'rgba(0, 230, 118, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        fill: true
+                    },
+                    {
+                        label: 'Buy & Hold (Benchmark)',
+                        data: benchmarkValues,
+                        borderColor: '#2962FF', // Azul
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#d1d4dc' }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#2B2B43' },
+                        ticks: { color: '#d1d4dc' }
+                    },
+                    y: {
+                        grid: { color: '#2B2B43' },
+                        ticks: { color: '#d1d4dc' }
+                    }
+                }
+            }
         });
-
-        // Línea Estrategia (Verde)
-        const strategySeries = chart.addLineSeries({
-            color: '#26a69a',
-            lineWidth: 2,
-            title: 'Estrategia IA',
-        });
-        strategySeries.setData(strategyData);
-
-        // Línea Benchmark (Gris/Azul)
-        const benchmarkSeries = chart.addLineSeries({
-            color: '#2962FF',
-            lineWidth: 2,
-            lineStyle: 2, // Dashed
-            title: 'Buy & Hold',
-        });
-        benchmarkSeries.setData(benchmarkData);
-
-        chart.timeScale().fitContent();
-
-        // Resize observer
-        new ResizeObserver(entries => {
-            if (entries.length === 0) return;
-            const newRect = entries[0].contentRect;
-            chart.applyOptions({ height: newRect.height, width: newRect.width });
-        }).observe(container);
     }
 
     /**
-     * Gráfico de Confianza (Mantenemos Chart.js para este gráfico simple de barras si es necesario,
-     * o lo eliminamos si ya no encaja en el diseño. Por ahora lo dejamos comentado o simplificado).
+     * Crea el gráfico de distribución de portafolio
+     */
+    createAllocationChart(canvasId, allocationData) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+
+        // Destruir gráfico anterior si existe
+        if (canvas.chartInstance) {
+            canvas.chartInstance.destroy();
+        }
+
+        const ctx = canvas.getContext('2d');
+        const labels = allocationData.map(a => a.symbol);
+        const data = allocationData.map(a => a.percentage);
+        const colors = [
+            '#26a69a', '#2962FF', '#FF6D00', '#F06292',
+            '#AB47BC', '#7E57C2', '#5C6BC0', '#42A5F5'
+        ];
+
+        canvas.chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#d1d4dc' }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Gráfico de Confianza (Bar Chart)
      */
     createConfidenceChart(canvasId, predictions) {
-        // Implementación opcional o mantener Chart.js solo para este widget pequeño
-        // Por simplicidad en esta fase, nos enfocamos en el gráfico principal.
+        // Por ahora no implementado en el diseño principal, 
+        // pero dejamos el método para evitar errores en app.js
+        console.log("Confidence chart update skipped (not in current layout)");
     }
 }
 

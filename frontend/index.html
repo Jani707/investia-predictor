@@ -15,6 +15,8 @@
 
     <!-- Lightweight Charts (TradingView) -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="css/styles.css">
@@ -137,7 +139,9 @@
                     </div>
                 </div>
                 <!-- Contenedor para Lightweight Charts -->
-                <div id="tvChartContainer" class="chart-wrapper" style="height: 400px; position: relative;"></div>
+                <div class="chart-wrapper" style="height: 400px; position: relative;">
+                    <canvas id="priceChart"></canvas>
+                </div>
             </div>
         </section>
 
@@ -215,6 +219,20 @@
                         </div>
                         <div class="portfolio-details">
                             <h3>Propuesta de Asignación</h3>
+                            <div class="portfolio-metrics"
+                                style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
+                                <div class="metric-badge"
+                                    style="background: var(--bg-tertiary); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem;">Retorno Esperado
+                                        (Anual)</span>
+                                    <div id="portfolioReturn"
+                                        style="font-size: 1.2rem; font-weight: 700; color: var(--color-success);">--%
+                                    </div>
+                                </div>
+                                <button id="executePortfolioBtn" class="btn btn-secondary" style="margin-left: auto;">
+                                    <span class="btn-icon">🚀</span> Ejecutar en Simulador
+                                </button>
+                            </div>
                             <table class="assets-table">
                                 <thead>
                                     <tr>
@@ -248,37 +266,98 @@
             <div class="chart-container">
                 <div class="chart-header">
                     <select id="backtestSymbol" class="select-input">
-                        <option value="VOO">VOO - S&P 500</option>
-                        <option value="QQQ">QQQ - Nasdaq 100</option>
-                        <option value="BTC-USD">BTC - Bitcoin</option>
-                        <option value="TSLA">TSLA - Tesla</option>
+                        <option value="" disabled selected>Cargando activos...</option>
                     </select>
                     <select id="backtestPeriod" class="select-input">
+                        <option value="7">1 Semana (Entrenamiento Rápido)</option>
+                        <option value="30">1 Mes</option>
+                        <option value="90">3 Meses</option>
                         <option value="180">6 Meses</option>
                         <option value="365" selected>1 Año</option>
                         <option value="730">2 Años</option>
                     </select>
+                    <div class="input-group" style="display: inline-flex; align-items: center; gap: 5px;">
+                        <span style="color: var(--text-secondary);">$</span>
+                        <input type="number" id="backtestAmount" class="select-input" value="10000" min="100" step="100"
+                            style="width: 100px;">
+                    </div>
                     <button id="runBacktestBtn" class="btn btn-primary">
                         <span class="btn-icon">▶️</span> Simular
                     </button>
                 </div>
 
-                <div class="backtest-stats" id="backtestStats" style="display: none;">
-                    <div class="stat-pill">
-                        <span class="label">Retorno Estrategia:</span>
-                        <span class="value" id="btStrategyReturn">--%</span>
-                    </div>
-                    <div class="stat-pill">
-                        <span class="label">Retorno Mercado:</span>
-                        <span class="value" id="btBenchmarkReturn">--%</span>
-                    </div>
-                    <div class="stat-pill">
-                        <span class="label">Trades:</span>
-                        <span class="value" id="btTradeCount">0</span>
-                    </div>
+                <div class="stat-pill">
+                    <span class="label">Valor Final:</span>
+                    <span class="value" id="btFinalValue">--</span>
                 </div>
+                <div class="stat-pill">
+                    <span class="label">Ganancia con IA:</span>
+                    <span class="value" id="btStrategyReturn">--%</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Ganancia Normal (Sin IA):</span>
+                    <span class="value" id="btBenchmarkReturn">--%</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Operaciones:</span>
+                    <span class="value" id="btTradeCount">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Riesgo Máximo:</span>
+                    <span class="value" id="btMaxDrawdown">--%</span>
+                </div>
+            </div>
 
-                <div id="backtestChartContainer" class="chart-wrapper" style="height: 400px; position: relative;"></div>
+            <div class="chart-wrapper" style="height: 400px; position: relative;">
+                <canvas id="backtestChart"></canvas>
+            </div>
+
+            <!-- Trade Log -->
+            <div class="trade-log-container" id="tradeLogContainer" style="display: none; margin-top: 20px;">
+                <h3>📜 Bitácora de Operaciones</h3>
+                <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Razón</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradeLogBody">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-icon">💡</div>
+                <div class="info-box-content">
+                    <h4>¿Cómo interpretar este gráfico?</h4>
+                    <p>Este simulador viaja al pasado y aplica las señales de nuestra IA día a día.</p>
+                    <ul>
+                        <li><span class="legend-dot" style="background: #00E676;"></span> <strong>Línea Verde
+                                (Estrategia IA):</strong> Cuánto dinero tendrías hoy si hubieras seguido nuestras
+                            recomendaciones.</li>
+                        <li><span class="legend-dot" style="background: #2962FF;"></span> <strong>Línea Azul (Buy &
+                                Hold):</strong> Cuánto tendrías si solo hubieras comprado y esperado (sin vender).
+                        </li>
+                    </ul>
+                    <p style="margin-top: 0.5rem; font-style: italic;">Si la línea verde está por encima de la azul,
+                        ¡la IA le ganó al mercado!</p>
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1rem 0;">
+                    <h4>¿Cuál es la estrategia?</h4>
+                    <p>La IA busca comprar "barato" (cuando el mercado reacciona exageradamente a la baja) y vender
+                        "caro" (cuando sube demasiado rápido). Usa indicadores como RSI y Bandas de Bollinger para
+                        detectar estos momentos.</p>
+                    <p style="margin-top: 0.5rem;"><strong>📰 Impacto de Noticias:</strong> El análisis de
+                        sentimientos actúa como un filtro. Si las noticias son muy negativas, la IA será más
+                        cautelosa (resta puntos). Si son positivas, será más agresiva (suma puntos).</p>
+                </div>
+            </div>
             </div>
         </section>
 

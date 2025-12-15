@@ -39,9 +39,23 @@ class AnalysisService:
     @staticmethod
     def analyze_symbol(symbol: str, macro_context: dict = None):
         """
-        Analiza un único activo usando lógica basada en reglas.
+        Analiza un único activo. Intenta usar ML primero, luego reglas.
         """
         try:
+            # Intentar usar Predictor (LSTM)
+            from ml.predictor import Predictor
+            predictor = Predictor()
+            
+            # Verificar si existe modelo entrenado
+            if predictor.load_model(symbol):
+                print(f"🤖 Using LSTM Model for {symbol}")
+                prediction = predictor.predict(symbol)
+                if prediction.get("success"):
+                    # Enriquecer con contexto macro si es necesario
+                    return prediction
+            
+            print(f"⚠️ No ML model for {symbol}, falling back to Rule-Based Analysis")
+            
             if macro_context is None:
                 macro_context = AnalysisService.get_macro_context()
                 
@@ -49,7 +63,8 @@ class AnalysisService:
             ticker = yf.Ticker(symbol)
             hist = ticker.history(period="1y")
             
-            if hist.empty: return None
+            if hist.empty:
+                raise Exception("No price data found (possibly delisted or IP blocked)")
             
             close = hist['Close']
             current_price = close.iloc[-1]
@@ -116,6 +131,25 @@ class AnalysisService:
             if score >= 2.5: recommendation = "COMPRAR"
             elif score <= -1: recommendation = "VENDER"
             
+            # Generar predicciones sintéticas basadas en el score
+            daily_change = 0
+            if score >= 2.5: daily_change = 0.005 # +0.5% diario
+            elif score >= 1: daily_change = 0.002 # +0.2% diario
+            elif score <= -2: daily_change = -0.005 # -0.5% diario
+            elif score <= -1: daily_change = -0.002 # -0.2% diario
+            
+            predictions = []
+            price = current_price
+            
+            for i in range(5):
+                price = price * (1 + daily_change)
+                change_pct = ((price - current_price) / current_price) * 100
+                predictions.append({
+                    "day": i + 1,
+                    "predicted_price": price,
+                    "change_percent": change_pct
+                })
+            
             return {
                 "symbol": symbol,
                 "name": symbol, # Placeholder
@@ -124,7 +158,16 @@ class AnalysisService:
                 "score": score,
                 "reasons": reasons,
                 "sentiment": sentiment,
-                "risk": "medium"
+                "risk": "medium",
+                "is_ml": False,
+                "success": True,
+                "predictions": predictions,
+                "average_change_percent": predictions[-1]["change_percent"],
+                "trend": "bullish" if score > 0 else "bearish" if score < 0 else "neutral",
+                "confidence": {
+                    "score": 0.7 if abs(score) > 2 else 0.5,
+                    "level": "medium"
+                }
             }
             
         except Exception as e:
@@ -138,22 +181,42 @@ class AnalysisService:
             elif symbol == "BND": base_price = 75.0
             
             mock_price = base_price * (1 + random.uniform(-0.05, 0.05))
-            mock_score = random.uniform(-1, 3)
+            # FIX: Score neutral (-2 a 2) en lugar de sesgado positivo (-1 a 3)
+            mock_score = random.uniform(-2, 2)
             
             rec = "MANTENER"
             if mock_score >= 2: rec = "COMPRAR"
             elif mock_score <= -1: rec = "VENDER"
             
+            # Generar predicciones sintéticas
+            predictions = []
+            price = mock_price
+            daily_change = 0.003 if rec == "COMPRAR" else -0.003 if rec == "VENDER" else 0
+            
+            for i in range(5):
+                price = price * (1 + daily_change)
+                change_pct = ((price - mock_price) / mock_price) * 100
+                predictions.append({
+                    "day": i + 1,
+                    "predicted_price": price,
+                    "change_percent": change_pct
+                })
+
             return {
                 "symbol": symbol,
                 "name": symbol,
                 "current_price": mock_price,
                 "recommendation": rec,
                 "score": mock_score,
-                "reasons": ["Datos simulados (API Error)", "Análisis técnico aproximado"],
+                "reasons": ["⚠️ Modo Simulación (API Error)", "Datos generados aleatoriamente"],
                 "sentiment": {"label": "Neutral", "score": 0.0},
                 "risk": "medium",
-                "is_mock": True
+                "is_mock": True,
+                "success": True,
+                "predictions": predictions,
+                "average_change_percent": predictions[-1]["change_percent"],
+                "trend": "bullish" if mock_score > 0 else "bearish" if mock_score < 0 else "neutral",
+                "confidence": {"score": 0.0, "level": "low"}
             }
 
     _cache = []

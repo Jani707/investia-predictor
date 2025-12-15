@@ -51,8 +51,18 @@ class Trainer:
         
         try:
             # 1. Cargar datos
+            # Para entrenamiento incremental, preferimos datos frescos
+            # Si force_download es False, aún verificamos la caché (24h)
+            # Pero para asegurar "tiempo real" como pidió el usuario, forzamos descarga si existe modelo
+            should_force = force_download
+            if not should_force:
+                # Verificar si existe modelo previo, si es así, conviene actualizar datos
+                if (MODELS_DIR / f"{symbol}_model.keras").exists():
+                    print("   ℹ️ Modelo previo detectado: Forzando actualización de datos...")
+                    should_force = True
+
             print("\n📥 Cargando datos...")
-            data = self.loader.fetch_data(symbol, use_cache=not force_download)
+            data = self.loader.fetch_data(symbol, use_cache=not should_force)
             print(f"   Registros: {len(data)}")
             print(f"   Período: {data.index[0]} a {data.index[-1]}")
             
@@ -64,10 +74,29 @@ class Trainer:
             # Guardar scaler para uso posterior
             preprocessor.save_scaler(symbol)
             
-            # 3. Crear y entrenar modelo
-            print("\n🧠 Creando modelo...")
+            # 3. Crear o cargar modelo
+            print("\n🧠 Configurando modelo...")
             model = LSTMModel(n_features=X_train.shape[2])
-            model.build()
+            
+            # Intentar cargar modelo existente para entrenamiento incremental
+            try:
+                model.load(symbol)
+                
+                # Verificar compatibilidad de shapes (por si cambiaron los features)
+                current_features = X_train.shape[2]
+                model_features = model.model.input_shape[-1]
+                
+                if current_features != model_features:
+                    print(f"   ⚠️ Cambio en arquitectura detectado (Features: {model_features} -> {current_features})")
+                    print(f"   ✨ Reconstruyendo modelo desde cero...")
+                    model.n_features = current_features
+                    model.build()
+                else:
+                    print(f"   🔄 Modelo existente cargado. Se continuará el entrenamiento (Fine-tuning).")
+                    
+            except Exception:
+                print(f"   ✨ No se encontró modelo previo (o error al cargar). Creando uno nuevo desde cero.")
+                model.build()
             
             # 4. Entrenar
             history = model.train(
@@ -95,7 +124,8 @@ class Trainer:
                 "metrics": metrics,
                 "data_points": len(data),
                 "train_samples": len(X_train),
-                "test_samples": len(X_test)
+                "test_samples": len(X_test),
+                "incremental": True  # Flag para indicar que fue incremental
             }
             
             self._save_training_results(symbol, results)

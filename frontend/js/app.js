@@ -96,6 +96,7 @@ class App {
     async runBacktest() {
         const symbol = document.getElementById('backtestSymbol').value;
         const days = document.getElementById('backtestPeriod').value;
+        const amount = document.getElementById('backtestAmount').value;
         const btn = document.getElementById('runBacktestBtn');
         const stats = document.getElementById('backtestStats');
 
@@ -103,13 +104,19 @@ class App {
             btn.disabled = true;
             btn.innerHTML = '⏳ Simulando...';
 
-            const result = await api.runBacktest(symbol, days);
+            const result = await api.runBacktest(symbol, days, amount);
 
             // Mostrar estadísticas
             stats.style.display = 'flex';
 
             const stratReturn = result.return_pct;
             const benchReturn = result.benchmark_return_pct;
+            const finalValue = result.final_value;
+
+            // Mostrar Valor Final
+            const finalValueEl = document.getElementById('btFinalValue');
+            finalValueEl.textContent = `$${finalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            finalValueEl.className = `value ${stratReturn >= 0 ? 'positive' : 'negative'}`;
 
             const stratEl = document.getElementById('btStrategyReturn');
             stratEl.textContent = `${stratReturn.toFixed(2)}%`;
@@ -121,10 +128,48 @@ class App {
 
             document.getElementById('btTradeCount').textContent = result.trades.length;
 
-            // Renderizar gráfico
-            chartManager.createBacktestChart('backtestChartContainer', result.equity_curve, result.benchmark_curve);
+            const ddEl = document.getElementById('btMaxDrawdown');
+            ddEl.textContent = `${result.max_drawdown.toFixed(2)}%`;
+            ddEl.className = `value ${result.max_drawdown > 20 ? 'negative' : 'neutral'}`;
 
-            this.showToast('success', 'Simulación completada');
+            // Renderizar Bitácora
+            const logContainer = document.getElementById('tradeLogContainer');
+            const logBody = document.getElementById('tradeLogBody');
+
+            if (result.trades.length > 0) {
+                logContainer.style.display = 'block';
+                logBody.innerHTML = result.trades.map(trade => `
+                    <tr>
+                        <td>${trade.date}</td>
+                        <td class="${trade.type === 'BUY' ? 'text-success' : 'text-danger'}">
+                            ${trade.type === 'BUY' ? '🟢 COMPRA' : '🔴 VENTA'}
+                        </td>
+                        <td>$${trade.price.toFixed(2)}</td>
+                        <td>${trade.shares.toFixed(2)}</td>
+                        <td>${trade.reason || (trade.type === 'BUY' ? `Score: ${trade.score}` : 'Señal Técnica')}</td>
+                    </tr>
+                `).join('');
+            } else {
+                logContainer.style.display = 'none';
+            }
+
+            // Renderizar gráfico
+            chartManager.createBacktestChart('backtestChart', result.equity_curve, result.benchmark_curve);
+
+            // Mensaje resumen
+            const diff = stratReturn - benchReturn;
+            let msg = '';
+            let type = 'info';
+
+            if (diff > 0) {
+                msg = `¡Excelente! La IA superó al mercado por un ${diff.toFixed(2)}%`;
+                type = 'success';
+            } else {
+                msg = `La IA rindió un ${Math.abs(diff).toFixed(2)}% menos que el mercado.`;
+                type = 'warning';
+            }
+
+            this.showToast(type, msg);
 
         } catch (error) {
             console.error(error);
@@ -204,6 +249,7 @@ class App {
             this.renderPredictionCards();
             this.updateStats();
             this.updateConfidenceChart();
+            this.populateBacktestSelector();
 
             // Actualizar precios en el simulador
             const currentPrices = {};
@@ -220,8 +266,38 @@ class App {
     }
 
     /**
-     * Muestra estado de carga cuando el backend está procesando
+     * Llena el selector de Backtest con los activos disponibles
      */
+    populateBacktestSelector() {
+        const selector = document.getElementById('backtestSymbol');
+        if (!selector) return;
+
+        // Guardar selección actual si existe
+        const currentSelection = selector.value;
+
+        // Limpiar opciones
+        selector.innerHTML = '';
+
+        // Ordenar alfabéticamente
+        const sortedPreds = [...this.predictions].sort((a, b) => a.symbol.localeCompare(b.symbol));
+
+        sortedPreds.forEach(pred => {
+            const option = document.createElement('option');
+            option.value = pred.symbol;
+            option.textContent = `${pred.symbol} - ${pred.name || ''}`;
+            selector.appendChild(option);
+        });
+
+        // Restaurar selección o seleccionar el primero (VOO por defecto si existe)
+        if (currentSelection && this.predictions.find(p => p.symbol === currentSelection)) {
+            selector.value = currentSelection;
+        } else {
+            // Intentar seleccionar VOO por defecto
+            if (this.predictions.find(p => p.symbol === 'VOO')) {
+                selector.value = 'VOO';
+            }
+        }
+    }
     showLoadingState() {
         const grid = document.getElementById('predictionsGrid');
         if (!grid) return;
@@ -395,7 +471,7 @@ class App {
     /**
      * Actualiza las estadísticas del dashboard
      */
-    updateStats() {
+    async updateStats() {
         // Total de activos
         const totalAssets = document.getElementById('totalAssets');
         if (totalAssets) {
@@ -424,14 +500,38 @@ class App {
             bullishCount.textContent = bullish;
         }
 
-        // Última actualización
+        // Última actualización (Basada en entrenamiento real)
         const lastUpdate = document.getElementById('lastUpdate');
         if (lastUpdate) {
-            const now = new Date();
-            lastUpdate.textContent = now.toLocaleTimeString('es-CL', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            try {
+                const status = await api.getTrainingStatus();
+                const models = status.models || [];
+
+                // Encontrar la fecha más reciente
+                const dates = models
+                    .map(m => m.last_trained)
+                    .filter(d => d) // Filtrar nulos
+                    .map(d => new Date(d));
+
+                if (dates.length > 0) {
+                    // Ordenar descendente
+                    const mostRecent = new Date(Math.max.apply(null, dates));
+
+                    lastUpdate.textContent = mostRecent.toLocaleString('es-CL', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour12: false
+                    }).replace(',', '');
+                    lastUpdate.title = `Último entrenamiento: ${mostRecent.toLocaleString()}`;
+                } else {
+                    lastUpdate.textContent = 'Pendiente';
+                }
+            } catch (error) {
+                console.warn('No se pudo obtener fecha de entrenamiento:', error);
+                lastUpdate.textContent = '--:--';
+            }
         }
     }
 
@@ -518,8 +618,12 @@ class App {
 
         try {
             await this.checkAPIConnection();
+
+            // Forzar actualización en backend
+            await api.post('/predict/refresh');
+
             await this.loadInitialData();
-            this.showToast('success', 'Datos actualizados correctamente');
+            this.showToast('success', 'Datos de mercado actualizados');
         } catch (error) {
             console.error('Refresh error:', error);
             this.showToast('error', `Error: ${error.message || 'No se pudo conectar'}`);
@@ -574,6 +678,18 @@ class App {
             // Renderizar gráfico
             chartManager.createAllocationChart('allocationChart', data.allocation);
 
+            // Mostrar retorno esperado
+            const returnEl = document.getElementById('portfolioReturn');
+            if (returnEl) {
+                returnEl.textContent = `+${data.expected_annual_return}%`;
+            }
+
+            // Configurar botón de ejecución
+            const execBtn = document.getElementById('executePortfolioBtn');
+            if (execBtn) {
+                execBtn.onclick = () => this.executePortfolio(data.allocation);
+            }
+
             // Renderizar tabla
             const tbody = document.getElementById('allocationTableBody');
             tbody.innerHTML = data.allocation.map(asset => `
@@ -598,6 +714,40 @@ class App {
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<span class="btn-icon">✨</span> Generar Propuesta';
+        }
+    }
+
+    /**
+     * Ejecuta la compra del portafolio en el simulador
+     */
+    executePortfolio(allocation) {
+        if (!confirm('¿Estás seguro de comprar todos estos activos en el simulador?')) return;
+
+        let successCount = 0;
+
+        allocation.forEach(asset => {
+            // Comprar cada activo
+            // Nota: Usamos el precio estimado del portafolio, idealmente deberíamos tener el precio real actual
+            // pero para el simulador está bien usar el snapshot del momento de generación.
+            // asset.shares es float, el simulador puede manejarlo o lo redondeamos?
+            // simulator.buy espera cantidad entera? Revisemos simulator.js... 
+            // simulator.js: this.holdings[symbol].quantity += quantity; (suma directo)
+            // Mejor redondeamos hacia abajo para asegurar ejecución simple o permitimos fraccional si JS lo aguanta.
+            // Vamos a permitir fraccional por ahora.
+
+            // Necesitamos el precio unitario. asset.amount / asset.shares = precio
+            const price = asset.amount / asset.shares;
+
+            const result = simulator.buy(asset.symbol, price, asset.shares);
+            if (result.success) successCount++;
+        });
+
+        if (successCount > 0) {
+            this.showToast('success', `¡Orden ejecutada! Se compraron ${successCount} activos.`);
+            // Scroll al simulador para ver resultados?
+            // document.getElementById('simulator').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            this.showToast('warning', 'No se pudieron comprar los activos (¿Fondos insuficientes?)');
         }
     }
 

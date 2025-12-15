@@ -45,25 +45,32 @@ async def generate_portfolio(request: PortfolioRequest):
     scored_candidates = []
     
     for symbol in candidates:
-        # Intentar obtener predicción real
-        prediction = predictor.predict(symbol)
-        
-        if prediction.get("success"):
-            growth = prediction["average_change_percent"]
-        else:
-            # Si no hay modelo entrenado, usar un score base según el riesgo para demo
-            # Esto permite que funcione inmediatamente sin entrenar todo
-            base_scores = {"low": 2.0, "medium": 5.0, "high": 8.0}
-            risk_level = ASSETS[symbol]["risk"]
-            growth = base_scores.get(risk_level, 3.0)
+        try:
+            # Intentar obtener predicción real
+            prediction = predictor.predict(symbol)
             
-        scored_candidates.append({
-            "symbol": symbol,
-            "name": ASSETS[symbol]["name"],
-            "risk": ASSETS[symbol]["risk"],
-            "growth": growth,
-            "price": prediction.get("current_price", 100.0) # Precio dummy si falla
-        })
+            if prediction and prediction.get("success"):
+                growth = prediction["average_change_percent"]
+                price = prediction.get("current_price", 100.0)
+            else:
+                # Si no hay modelo entrenado o falló, usar un score base
+                base_scores = {"low": 2.0, "medium": 5.0, "high": 8.0}
+                risk_level = ASSETS[symbol]["risk"]
+                growth = base_scores.get(risk_level, 3.0)
+                price = 100.0
+                if prediction:
+                    price = prediction.get("current_price", 100.0)
+                    
+            scored_candidates.append({
+                "symbol": symbol,
+                "name": ASSETS[symbol]["name"],
+                "risk": ASSETS[symbol]["risk"],
+                "growth": growth,
+                "price": price
+            })
+        except Exception as e:
+            print(f"⚠️ Error processing {symbol} for portfolio: {e}")
+            continue
     
     # Ordenar por potencial de crecimiento
     scored_candidates.sort(key=lambda x: x["growth"], reverse=True)
@@ -99,9 +106,13 @@ async def generate_portfolio(request: PortfolioRequest):
             "investment_thesis": ASSETS[asset["symbol"]].get("investment_thesis", "N/A")
         })
         
+    # Calcular retorno esperado ponderado
+    expected_annual_return = sum(item["percentage"] * item["expected_growth"] for item in allocation) / 100
+    
     return {
         "risk_profile": risk,
         "total_amount": amount,
         "allocation": allocation,
+        "expected_annual_return": round(expected_annual_return, 2),
         "diversity_score": "Alta" if len(allocation) >= 4 else "Media"
     }

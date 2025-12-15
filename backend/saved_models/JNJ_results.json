@@ -1,17 +1,18 @@
 {
   "symbol": "JNJ",
   "name": "Johnson & Johnson",
-  "trained_at": "2025-12-11T09:23:34.566846",
-  "epochs_completed": 60,
-  "final_loss": 0.004082402214407921,
-  "final_val_loss": 0.17914094030857086,
+  "trained_at": "2025-12-15T08:39:32.784293",
+  "epochs_completed": 12,
+  "final_loss": 0.003724286798387766,
+  "final_val_loss": 0.04089068993926048,
   "metrics": {
-    "loss": 0.17280840873718262,
-    "mae": 0.3868618607521057,
-    "rmse": 0.41570230005680736,
-    "directional_accuracy": 0.5844155844155844
+    "loss": 0.03955724090337753,
+    "mae": 0.13928332924842834,
+    "rmse": 0.19889001377278412,
+    "directional_accuracy": 0.47368421052631576
   },
-  "data_points": 502,
-  "train_samples": 311,
-  "test_samples": 78
+  "data_points": 1256,
+  "train_samples": 914,
+  "test_samples": 229,
+  "incremental": true
 }

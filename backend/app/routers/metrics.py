@@ -62,6 +62,35 @@ async def get_all_metrics():
     }
 
 
+@router.get("/metrics/status")
+async def get_training_status():
+    """
+    Obtiene el estado de entrenamiento de todos los modelos.
+    
+    Returns:
+        Estado de cada modelo (entrenado/no entrenado)
+    """
+    status = trainer.get_training_status()
+    
+    return {
+        "models": [
+            {
+                "symbol": symbol,
+                "name": ASSETS[symbol]["name"],
+                "trained": info.get("model_exists", False),
+                "last_trained": info.get("last_trained"),
+                "has_metrics": info.get("results_exist", False)
+            }
+            for symbol, info in status.items()
+        ],
+        "summary": {
+            "total": len(status),
+            "trained": sum(1 for info in status.values() if info.get("model_exists")),
+            "pending": sum(1 for info in status.values() if not info.get("model_exists"))
+        }
+    }
+
+
 @router.get("/metrics/{symbol}")
 async def get_symbol_metrics(symbol: str):
     """
@@ -106,34 +135,5 @@ async def get_symbol_metrics(symbol: str):
         "loss_history": {
             "final_loss": results.get("final_loss"),
             "final_val_loss": results.get("final_val_loss")
-        }
-    }
-
-
-@router.get("/metrics/status")
-async def get_training_status():
-    """
-    Obtiene el estado de entrenamiento de todos los modelos.
-    
-    Returns:
-        Estado de cada modelo (entrenado/no entrenado)
-    """
-    status = trainer.get_training_status()
-    
-    return {
-        "models": [
-            {
-                "symbol": symbol,
-                "name": ASSETS[symbol]["name"],
-                "trained": info.get("model_exists", False),
-                "last_trained": info.get("last_trained"),
-                "has_metrics": info.get("results_exist", False)
-            }
-            for symbol, info in status.items()
-        ],
-        "summary": {
-            "total": len(status),
-            "trained": sum(1 for info in status.values() if info.get("model_exists")),
-            "pending": sum(1 for info in status.values() if not info.get("model_exists"))
         }
     }

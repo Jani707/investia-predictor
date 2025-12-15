@@ -16,11 +16,11 @@ class BacktestService:
         buffer_days = 200 # Para SMA 200
         total_days = days + buffer_days
         ticker = yf.Ticker(symbol)
-        # period="2y" es seguro para cubrir 365 + 200 días
-        hist = ticker.history(period="2y")
+        # period="5y" es seguro para cubrir 730 + 200 días
+        hist = ticker.history(period="5y")
         
         if hist.empty:
-            return {"error": "No data found"}
+            raise ValueError(f"No historical data found for symbol {symbol}")
             
         # 2. Calcular Indicadores (Vectorizado para velocidad)
         close = hist['Close']
@@ -78,7 +78,52 @@ class BacktestService:
             
             # --- DECISIONES ---
             
+            # GESTIÓN DE RIESGO (Stop Loss / Take Profit)
+            if shares > 0:
+                # Calcular precio promedio de compra (simplificado, asumiendo una entrada)
+                # En un sistema real, llevaríamos el Average Entry Price.
+                # Aquí usaremos el precio de la última compra como referencia si no tenemos historial detallado,
+                # pero para hacerlo bien, necesitamos trackear el precio de entrada.
+                # Como el backtest actual compra todo de una vez (shares_to_buy = cash // price), 
+                # el precio de entrada es el precio de la última compra.
+                
+                # Buscar la última compra en trades
+                last_buy = next((t for t in reversed(trades) if t["type"] == "BUY"), None)
+                if last_buy:
+                    entry_price = last_buy["price"]
+                    pct_change = (price - entry_price) / entry_price
+                    
+                    # Stop Loss: -7%
+                    if pct_change <= -0.07:
+                        revenue = shares * price
+                        cash += revenue
+                        trades.append({
+                            "type": "SELL",
+                            "date": date.strftime("%Y-%m-%d"),
+                            "price": price,
+                            "shares": shares,
+                            "reason": "Stop Loss (-7%) 🛑"
+                        })
+                        shares = 0
+                        continue # Salir del loop de este día
+                        
+                    # Take Profit: +15%
+                    if pct_change >= 0.15:
+                        revenue = shares * price
+                        cash += revenue
+                        trades.append({
+                            "type": "SELL",
+                            "date": date.strftime("%Y-%m-%d"),
+                            "price": price,
+                            "shares": shares,
+                            "reason": "Take Profit (+15%) 💰"
+                        })
+                        shares = 0
+                        continue
+
             # COMPRA (Entry)
+            # Hacemos la estrategia un poco más exigente (Score > 2.5 -> Score >= 3)
+            # O mantenemos 2.5 pero confiamos en el Stop Loss.
             if score >= 2.5 and cash > 0:
                 # Comprar todo lo posible
                 shares_to_buy = cash // price
@@ -94,8 +139,7 @@ class BacktestService:
                         "score": score
                     })
             
-            # VENTA (Exit) - Lógica simple de salida
-            # Vender si RSI sobrecomprado (>70) o Precio > Banda Superior (Ganancia rápida)
+            # VENTA (Exit) - Señal Técnica
             elif shares > 0:
                 should_sell = False
                 reason = ""
@@ -136,12 +180,26 @@ class BacktestService:
         final_value = equity_curve[-1]['value']
         bh_final_value = bh_curve[-1]['value']
         
+        # Calcular Max Drawdown
+        max_drawdown = 0
+        peak = -999999
+        
+        for point in equity_curve:
+            value = point['value']
+            if value > peak:
+                peak = value
+            
+            dd = (peak - value) / peak
+            if dd > max_drawdown:
+                max_drawdown = dd
+        
         return {
             "symbol": symbol,
             "initial_capital": initial_capital,
             "final_value": final_value,
             "return_pct": ((final_value - initial_capital) / initial_capital) * 100,
             "benchmark_return_pct": ((bh_final_value - initial_capital) / initial_capital) * 100,
+            "max_drawdown": max_drawdown * 100, # En porcentaje
             "trades": trades,
             "equity_curve": equity_curve,
             "benchmark_curve": bh_curve

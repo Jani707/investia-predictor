@@ -30,6 +30,31 @@ class APIClient {
     }
 
     /**
+     * Realiza una petición POST a la API
+     */
+    async post(endpoint, body = {}) {
+        try {
+            const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`API Error [POST ${endpoint}]:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Verifica la conexión con el servidor
      */
     async checkConnection() {
@@ -177,7 +202,7 @@ class APIClient {
     /**
      * Ejecuta un backtest
      */
-    async runBacktest(symbol, days) {
+    async runBacktest(symbol, days, initialCapital = 10000) {
         try {
             const response = await fetch(`${this.baseUrl}/backtest`, {
                 method: 'POST',
@@ -186,12 +211,14 @@ class APIClient {
                 },
                 body: JSON.stringify({
                     symbol: symbol,
-                    days: parseInt(days)
+                    days: parseInt(days),
+                    initial_capital: parseFloat(initialCapital)
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
             }
 
             return await response.json();

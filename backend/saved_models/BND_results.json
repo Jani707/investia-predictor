@@ -1,17 +1,18 @@
 {
   "symbol": "BND",
   "name": "Vanguard Total Bond Market ETF",
-  "trained_at": "2025-12-11T09:03:17.928312",
-  "epochs_completed": 79,
-  "final_loss": 0.007186836563050747,
-  "final_val_loss": 0.06195053830742836,
+  "trained_at": "2025-12-15T08:27:39.320225",
+  "epochs_completed": 11,
+  "final_loss": 0.011107084341347218,
+  "final_val_loss": 0.02837236411869526,
   "metrics": {
-    "loss": 0.05545618012547493,
-    "mae": 0.22776412963867188,
-    "rmse": 0.23549135986894534,
-    "directional_accuracy": 0.4805194805194805
+    "loss": 0.022625887766480446,
+    "mae": 0.1353255957365036,
+    "rmse": 0.15041904209696838,
+    "directional_accuracy": 0.5263157894736842
   },
-  "data_points": 502,
-  "train_samples": 311,
-  "test_samples": 78
+  "data_points": 1256,
+  "train_samples": 914,
+  "test_samples": 229,
+  "incremental": true
 }

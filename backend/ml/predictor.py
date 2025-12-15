@@ -57,6 +57,8 @@ class Predictor:
             
         except Exception as e:
             print(f"⚠️ No se pudo cargar modelo para {symbol}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def predict(self, symbol: str) -> Dict:

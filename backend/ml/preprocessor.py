@@ -80,6 +80,25 @@ class DataPreprocessor:
         
         # Retorno diario
         df['Daily_Return'] = df['Close'].pct_change()
+
+        # --- Advanced Indicators ---
+        
+        # Stochastic Oscillator
+        low_min = df['Low'].rolling(window=14).min()
+        high_max = df['High'].rolling(window=14).max()
+        df['Stoch_K'] = 100 * ((df['Close'] - low_min) / (high_max - low_min))
+        df['Stoch_D'] = df['Stoch_K'].rolling(window=3).mean()
+        
+        # ATR (Average True Range)
+        high_low = df['High'] - df['Low']
+        high_close = np.abs(df['High'] - df['Close'].shift())
+        low_close = np.abs(df['Low'] - df['Close'].shift())
+        ranges = pd.concat([high_low, high_close, low_close], axis=1)
+        true_range = np.max(ranges, axis=1)
+        df['ATR'] = pd.Series(true_range).rolling(window=14).mean()
+        
+        # OBV (On-Balance Volume)
+        df['OBV'] = (np.sign(df['Close'].diff()) * df['Volume']).fillna(0).cumsum()
         
         # Eliminar filas con NaN (debido a los indicadores)
         df = df.dropna()
@@ -194,7 +213,7 @@ class DataPreprocessor:
         
         # Seleccionar features para el modelo
         # Usamos Close como objetivo principal
-        feature_cols = ['Close', 'Volume', 'SMA_10', 'SMA_20', 'RSI', 'MACD', 'Volatility']
+        feature_cols = ['Close', 'Volume', 'SMA_10', 'SMA_20', 'RSI', 'MACD', 'Volatility', 'Stoch_K', 'ATR', 'OBV']
         available_cols = [col for col in feature_cols if col in df.columns]
         
         if 'Close' not in available_cols:

@@ -1,17 +1,18 @@
 {
   "symbol": "TSLA",
   "name": "Tesla Inc.",
-  "trained_at": "2025-12-11T09:37:30.090824",
-  "epochs_completed": 68,
-  "final_loss": 0.009220910258591175,
-  "final_val_loss": 0.08926201611757278,
+  "trained_at": "2025-12-15T08:46:51.216621",
+  "epochs_completed": 11,
+  "final_loss": 0.005971768405288458,
+  "final_val_loss": 0.014466531574726105,
   "metrics": {
-    "loss": 0.06971137225627899,
-    "mae": 0.24041996896266937,
-    "rmse": 0.26402911041544785,
-    "directional_accuracy": 0.5194805194805194
+    "loss": 0.013403629884123802,
+    "mae": 0.09660983085632324,
+    "rmse": 0.1157740451116999,
+    "directional_accuracy": 0.4868421052631579
   },
-  "data_points": 502,
-  "train_samples": 311,
-  "test_samples": 78
+  "data_points": 1256,
+  "train_samples": 914,
+  "test_samples": 229,
+  "incremental": true
 }
