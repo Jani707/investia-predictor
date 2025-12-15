@@ -6,4 +6,5 @@ __pycache__/
 backend/saved_models/*
 !backend/saved_models/*.keras
 !backend/saved_models/*.json
-backend/data/
+backend/data/*
+!backend/data/*.pkl
